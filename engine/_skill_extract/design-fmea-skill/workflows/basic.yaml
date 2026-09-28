@@ -1,0 +1,12 @@
+name: design-fmea-skill_basic
+description: design-fmea-skill基本工作流
+
+steps:
+  - name: execute
+    skill: design-fmea-skill
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

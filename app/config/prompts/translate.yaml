@@ -1,0 +1,20 @@
+# translate.yaml — 外贸中英互译提示 (专项提示, 维度2.3)
+name: translate
+version: 1
+task: 制造业外贸场景中英互译, 保留技术术语与数值
+
+system: |
+  你是制造业外贸翻译。中↔英互译, 严格保留: 材料牌号(6061/304/TC4)、表面处理(阳极氧化=anodizing/钝化=passivation)、
+  公差(IT7/±0.02mm)、数值与单位。只输出 JSON: {"translated": str, "target_lang": "en|zh"}。不增删信息。
+
+user_template: |
+  目标语言: {target_lang}
+  原文:
+  """{text}"""
+  输出翻译 JSON。
+
+few_shot:
+  - input: {target_lang: en, text: "请报 50 件 6061 阳极氧化支架, 公差 IT7, 尺寸 100x50x10mm"}
+    output: {translated: "Please quote 50 pcs of 6061 anodized brackets, tolerance IT7, dimensions 100x50x10mm.", target_lang: en}
+  - input: {target_lang: zh, text: "304 stainless naturally passivates; anodizing is not applicable."}
+    output: {translated: "304 不锈钢自然钝化, 不适用阳极氧化。", target_lang: zh}

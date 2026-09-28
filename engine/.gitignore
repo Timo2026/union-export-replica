@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.bak
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project
+logs/
+data/uploads/
+data/step/
+data/stl/
+data/jiewo/
+data/batch_quote/
+*.log
+*.step
+*.stl
+tmp_*.json
+chat_req.json
+chat_resp*.json
+
+# Indexes / tooling
+.codegraph/
+.codeartsdoer/
+.arts/
+.function-router/
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Secrets
+.env
+
+# Runtime data
+data/exports/
+*.db
+.coverage

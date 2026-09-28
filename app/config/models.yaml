@@ -1,0 +1,56 @@
+version: 1
+updated_at: '2026-09-17 23:15:37'
+models:
+  llm:
+    label: LLM · 推理/文本
+    role: REASON
+    endpoint: http://127.0.0.1:1234/v1
+    model: qwen3.8-27b
+    enabled: true
+    probe_path: /models
+    usage: RFQ 抽取 / ReAct 规划 / 回复草稿 / 摘要 / 翻译 (LLM 提议, 引擎裁决)
+    note: 推理模型需充足 max_tokens; LMStudio response_format 用 text
+  vlm:
+    label: VLM · 图纸视觉
+    role: VISION
+    endpoint: http://127.0.0.1:1234/v1
+    model: qwen3.8-27b
+    enabled: true
+    probe_path: /models
+    note: 图纸/图片感知, 只出事实不定价格
+  embedding:
+    label: Embedding · 检索向量
+    role: EMBED
+    endpoint: http://127.0.0.1:1278/v1
+    model: Qwen3-Embedding-0.6B
+    enabled: true
+    probe_path: /models
+    note: 历史 RFQ/案例/邮件/语音 transcript 向量化 (funasr RAG)
+  ocr:
+    label: OCR · 图纸文字
+    role: OCR
+    endpoint: http://127.0.0.1:8090
+    model: PaddleOCR
+    enabled: false
+    probe_path: /health
+    note: PDF/图纸文字识别; 未部署则显式 offline, 不阻断 (可由引擎内置 OCR 兜底)
+  asr:
+    label: ASR · 语音转写
+    role: ASR
+    endpoint: http://127.0.0.1:8089
+    model: Qwen3-ASR-0.6B
+    enabled: true
+    probe_path: /
+    note: 语音/视频客户约束转写; P0 本地 FunASR/Qwen3-ASR (非 Parakeet, Blackwell 不支持)
+  deterministic:
+    label: 确定性内核 · 报价/DFM
+    role: DETERMINISTIC
+    endpoint: http://127.0.0.1:7862
+    model: calc_quote+ConflictChecker
+    enabled: true
+    probe_path: /api/health
+    locked: true
+    note: cnc-ai-brain v12; 离线自动 byte-identical vendored kernel 兜底
+funasr_gateway:
+  endpoint: http://127.0.0.1:8866
+  probe_path: /health

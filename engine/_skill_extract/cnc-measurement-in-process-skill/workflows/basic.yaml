@@ -1,0 +1,12 @@
+name: cnc-measurement-in-process-skill_basic
+description: cnc-measurement-in-process-skill基本工作流
+
+steps:
+  - name: execute
+    skill: cnc-measurement-in-process-skill
+    capability: analyze
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

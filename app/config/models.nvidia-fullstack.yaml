@@ -1,0 +1,199 @@
+# NVIDIA 全栈模型配置 · Nemotron 家族平替（v3 · 实测栈对齐 2026-09-20）
+# 策略: 全 NVIDIA 自研, MoE 能效梯度, Omni 合并视觉, ASR 专档流式
+#
+# 能效梯度 (模型 ID = hf-mirror API 实测仓库 200 OK, 体积/文件数见
+#          docs/PRD-MASTER-UEA-DELIVERY.md §1.2-F; 否决记录同节):
+#   FAST   <- nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16              (8.0GB/18f)
+#   REASON <- nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4 (21.6GB/70f, MoE 30B/3B激活)
+#   VISION <- nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4 (22.4GB/26f, any-to-any 256K, trust_remote_code)
+#   ASR    <- nvidia/nemotron-3.5-asr-streaming-0.6b             (5.7GB/22f, 专档流式; 不再蹭 Omni)
+#   EMBED  <- nvidia/Nemotron-3-Embed-1B-BF16                    (2.3GB/15f; nv-embedqa 已否决)
+#   DETERMINISTIC <- Timo 引擎 (铁律1锁定, 永不平替)
+#
+# 用法: 启动 --models config/models.nvidia-fullstack.yaml
+#
+# N0 自检结论 (2026-09-20, spark-51 / GB10 sm_121):
+#   - GPU: GB10 Blackwell, driver 580.82.09, 统一内存 (nvidia-smi memory=N/A)
+#   - NIM 服务: 未部署 (8000/8002/8020/8021/8011 全空)
+#   - Nemotron 权重: 未下载 (节点仅有 Qwen3-0.6B)
+#   - docker: permission denied (Developer 不在 docker 组, NIM 容器线节点走不通)
+#   - 已部署: 本项目 api_server :8888 (Qwen3-0.6B GPU bf16, ~77 tok/s, 公网 :8051;
+#            :8888 曾被并发会话占用, 起服前必须探活 — 与 n0_audit 记录并存待核)
+#   - 门禁档: 仅 smi -> FAST/REASON 走进程级回退 (:8888), VISION/ASR/EMBED 标记未就绪
+#   - 升级路径: hf-mirror 拉 Nemotron 权重 (实测 1.25MB/s) + 起 vLLM 进程服务 -> 改 endpoint 即生效
+
+version: 3
+updated_at: '2026-09-20'
+strategy: 'Nemotron 全家族 MoE 能效梯度 Omni 视觉融合 ASR 专档流式'
+note: 'v3: 模型 ID 全部对齐 hf-mirror 实测仓库; NIM 端点保留待部署 (docker 无权限, 仅参考编排), 进程级回退指向已部署 :8888。2026-09-25 校准: :8888 实为 livekernel API (非 Qwen3-0.6B), :8051 已加 UEA_API_TOKEN 门禁'
+
+n0_audit:
+  date: '2026-09-20'
+  node: spark-51
+  gpu:
+    name: 'NVIDIA GB10'
+    compute_cap: '12.1'
+    driver: '580.82.09'
+    memory: 'unified (nvidia-smi N/A)'
+  nim_services:
+    deployed: false
+    ports_probed:
+      - 8000
+      - 8002
+      - 8020
+      - 8011
+  nemotron_weights:
+    present: false
+    only: 'Qwen3-0.6B'
+  docker:
+    available: false
+    reason: 'permission denied (Developer not in docker group)'
+  # 2026-09-25 校准: 原记录 'Qwen3-0.6B / tok_s 62.6' 已漂移 —— :8888 现任进程为
+  # timo_livekernel services.api_server (union-export-agent v7.1.0-livekernel, FastAPI
+  # 邮件台/报价后端, 76 路由, **不是** LLM 推理端点; curl /v1/chat/completions -> 404)。
+  # 公网 :8051 经 NAT 指向同一进程; 自 2026-09-25 起该窗口启用 UEA_API_TOKEN 门禁
+  # (P1-1: 零鉴权 + 0.0.0.0 暴露 /v1/* 客户数据), 未带 Authorization: Bearer 一律 401。
+  process_fallback:
+    endpoint: 'http://127.0.0.1:8888'
+    model: 'livekernel-api (union-export-agent v7.1.0) — 非 LLM 端点'
+    tok_s: 'n/a'
+    public: 'http://NODE_PUBLIC_HOST:8051'
+    auth: 'Env UEA_API_TOKEN (见 union-deploy/livekernel.env, 权限 600) — Authorization: Bearer 或 /__auth 换 cookie'
+  gate_level: 'smi-only'
+  upgrade_action: '拉 Nemotron 权重 + 起 llama.cpp/vLLM 进程服务 -> 改 endpoint'
+
+models:
+  llm:
+    label: 'Nemotron-3.5-Lightning-30B-A3B MoE 深度推理'
+    role: REASON
+    endpoint: http://127.0.0.1:8000/v1
+    model: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4
+    enabled: true
+    probe_path: /models
+    usage: 'RFQ 抽取 / ReAct 规划 / 回复草稿 / 摘要 / 翻译 (LLM 提议, 引擎裁决)'
+    note: 'MoE 30B 总参 3B 激活; NVFP4 Blackwell 原生 FP4 (GGUF 已否决: 无 FP4 tensor core 路径); vLLM 进程级或 NIM 容器'
+    fallback:
+      endpoint: 'http://127.0.0.1:8888/v1'
+      model: 'Qwen3-0.6B'
+      reason: 'N0 未部署 Lightning, 用已部署 GPU api 兜底'
+
+  fast:
+    label: 'NVIDIA-Nemotron-3-Nano-4B-BF16 边缘极速'
+    role: FAST
+    endpoint: http://127.0.0.1:8002/v1
+    model: nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16
+    enabled: true
+    probe_path: /models
+    usage: '意图分类 / skill 路由 / 快速抽取 (低延迟路径)'
+    note: '4B 极速; model_router FAST 角色专用; 与 30B MoE 分层调度'
+    fallback:
+      endpoint: 'http://127.0.0.1:8888/v1'
+      model: 'Qwen3-0.6B'
+      reason: 'N0 未部署 Nano-4B, 用已部署 GPU api 兜底'
+
+  omni:
+    label: 'Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4 多模态融合'
+    role: OMNI
+    endpoint: http://127.0.0.1:8020/v1
+    model: nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4
+    enabled: true
+    probe_path: /models
+    usage: '图纸视觉(VLM) + 图纸文字(OCR); ASR 已拆专档 asr.streaming'
+    note: 'Omni any-to-any 256K ctx; custom_code tag -> 必须 trust_remote_code; 只出事实不定价格'
+    fallback:
+      endpoint: ''
+      model: 'mock'
+      reason: 'N0 未部署 Omni, VISION 降级 mock'
+
+  vlm:
+    label: 'VLM (走 Omni)'
+    role: VISION
+    endpoint: http://127.0.0.1:8020/v1
+    model: nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4
+    enabled: true
+    probe_path: /models
+    note: 'VLM 路由到 Omni 多模态服务; N0 未部署 -> mock'
+
+  asr:
+    label: 'ASR 专档流式 nemotron-3.5-asr-streaming-0.6b'
+    role: ASR
+    endpoint: http://127.0.0.1:8021/v1
+    model: nvidia/nemotron-3.5-asr-streaming-0.6b
+    enabled: true
+    probe_path: /models
+    note: 'v3 专档流式 (不再蹭 Omni); 绕开 Parakeet Blackwell 限制; N0 回退 FunASR :8866/:8089'
+
+  ocr:
+    label: 'OCR (走 Omni)'
+    role: OCR
+    endpoint: http://127.0.0.1:8020
+    model: nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4
+    enabled: true
+    probe_path: /health
+    note: 'OCR 路由到 Omni; Omni 不覆盖则降级引擎内置 OCR / MinerU pip'
+
+  embedding:
+    label: 'Nemotron-3-Embed-1B-BF16 检索向量'
+    role: EMBED
+    endpoint: http://127.0.0.1:8011/v1
+    model: nvidia/Nemotron-3-Embed-1B-BF16
+    enabled: true
+    probe_path: /models
+    note: 'RAG 向量化; multilingual 含中文; vllm tag; 切 embed 必须重建向量库 (rag_layers.vector_backend)'
+    fallback:
+      endpoint: 'http://127.0.0.1:8888/v1'
+      model: 'Qwen3-Embedding-0.6B'
+      reason: 'N0 未部署 Nemotron-Embed, 回退进程级 embed'
+
+  deterministic:
+    label: '确定性内核 报价/DFM (不平替)'
+    role: DETERMINISTIC
+    endpoint: http://127.0.0.1:7862
+    model: calc_quote+ConflictChecker
+    enabled: true
+    probe_path: /api/health
+    locked: true
+    note: '铁律1锁定 不管 LLM 换什么后端 价格永远由 Timo 裁决'
+
+model_router_strategy:
+  FAST:
+    model: nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16
+    endpoint_ref: fast.endpoint
+    fallback_ref: fast.fallback
+  REASON:
+    model: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4
+    endpoint_ref: llm.endpoint
+    fallback_ref: llm.fallback
+  VISION:
+    model: nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4
+    endpoint_ref: omni.endpoint
+    fallback_ref: omni.fallback
+  ASR:
+    model: nvidia/nemotron-3.5-asr-streaming-0.6b
+    endpoint_ref: asr.endpoint
+    fallback_ref: funasr_gateway
+  EMBED:
+    model: nvidia/Nemotron-3-Embed-1B-BF16
+    endpoint_ref: embedding.endpoint
+    fallback_ref: embedding.fallback
+  DETERMINISTIC:
+    locked: true
+    endpoint_ref: deterministic.endpoint
+  note: 'FAST 用 4B 省延迟; REASON 用 MoE 省显存; 视觉用 Omni; ASR 专档流式; EMBED 用 Nemotron-3-Embed-1B (nv-embedqa 已否决); N0 全部降级到 process_fallback'
+
+neemo_retriever:
+  enabled: false
+  endpoint: http://127.0.0.1:8001
+  reranker_model: nvidia/nv-rerankqa-retriever
+  note: '启用后 RAG recall 回归需重跑'
+
+nemo_guardrails:
+  enabled: false
+  endpoint: http://127.0.0.1:7331
+  note: '启用后跑 test_guardrails.py 注入负向回归; builtin 永远兜底'
+
+funasr_gateway:
+  endpoint: http://127.0.0.1:8866
+  asr_url: http://127.0.0.1:8089
+  probe_path: /health
+  note: 'Omni 接管后 funasr-gui 降级为纯适配层或关闭; N0 作为 ASR 回退'

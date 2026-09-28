@@ -1,0 +1,12 @@
+name: aluminum-7075-knowledge_basic
+description: aluminum-7075-knowledge基本工作流
+
+steps:
+  - name: execute
+    skill: aluminum-7075-knowledge
+    capability: check
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

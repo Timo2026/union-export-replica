@@ -1,0 +1,12 @@
+name: cnc-milling-knowledge_basic
+description: cnc-milling-knowledge基本工作流
+
+steps:
+  - name: execute
+    skill: cnc-milling-knowledge
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

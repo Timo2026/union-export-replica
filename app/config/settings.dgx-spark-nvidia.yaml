@@ -1,0 +1,119 @@
+# Max-NVIDIA runtime overlay for DGX Spark (profile: dgx-spark-p0 / nvidia-fullstack)
+# 用法: 节点上用本文件覆盖/合并 config/settings.yaml；未过门禁前 model_router.backend 保持 local。
+# 铁律: DETERMINISTIC 永远 Timo；本文件不承载任何密钥。
+#
+# v3 (2026-09-20): Nemotron 全家族替换 Llama/Qwen 混搭 (模型 ID = hf-mirror 实测仓库)
+#   - NIM 容器线: Nemotron-3-Nano-4B-BF16 / Lightning-30B-A3B-NVFP4 / Nano-Omni-NVFP4 /
+#                 ASR-streaming-0.6b / Nemotron-3-Embed-1B-BF16 (nv-embedqa 已否决)
+#   - 进程级回退: 指向已部署 :8888 (Qwen3-0.6B GPU bf16 api ~77 tok/s, N0 档兜底)
+#   - N0 自检: 节点无 docker 权限 / 无 Nemotron 权重 -> backend=local, 走进程级回退
+#   - 权重通道: hf-mirror.com 1.25MB/s (实测); 五件套 ~60GB, 下载账见主 PRD §1.2-F
+
+profile: dgx-spark-p0
+nvidia_fullstack: true
+models_config: config/models.nvidia-fullstack.yaml
+
+timo:
+  base_url: "http://127.0.0.1:7862"
+  timeout_s: 25
+  health_timeout_s: 4
+  engine_src: "/workspace/_timo_engine/Timo_CNC-AI-Brain-v12.0-Fusion"
+  engine_python: "/workspace/_timo_engine/Timo_CNC-AI-Brain-v12.0-Fusion/.venv/bin/python"
+  allow_fallback: true
+
+# ---- Model Router: NVIDIA 优先, 探测失败必须能回落 ----
+# backend: local | nvidia | mock
+# N0 自检结论: 节点无 docker 权限 + 无 Nemotron 权重 -> backend=local
+# 升级: 拉得权重 + 起进程服务/NIM 容器 -> 改 backend=nvidia
+model_router:
+  backend: local
+  nvidia_preferred: true
+  roles:
+    # NIM 容器线 (docker + NGC 门禁绿时; Nemotron 全家族)
+    FAST_NIM:
+      endpoint: "http://127.0.0.1:8002/v1"
+      model: "nvidia/nemotron-3-nano-4b"
+      note: "NIM 镜像 nvcr.io/nim/nvidia/nemotron-3-nano-4b"
+    REASON_NIM:
+      endpoint: "http://127.0.0.1:8000/v1"
+      model: "nvidia/nemotron-3.5-lightning-30b-a3b"
+      note: "MoE 30B 总参 3B 激活; 显存不足时降级 FAST_NIM"
+    VISION_NIM:
+      endpoint: "http://127.0.0.1:8020/v1"
+      model: "nvidia/nemotron-3-nano-omni"
+      note: "Omni 多模态: VLM+ASR+OCR 三合一"
+    ASR_NIM:
+      endpoint: "http://127.0.0.1:8020/v1"
+      model: "nvidia/nemotron-3-nano-omni"
+      note: "Omni 音频路径; 失败回退 ASR_LOCAL (FunASR)"
+    EMBED_NIM:
+      endpoint: "http://127.0.0.1:8011/v1"
+      model: "nvidia/Nemotron-3-Embed-1B-BF16"
+      note: "v3: nv-embedqa-e5-v5 已否决 (NIM 容器路线关闭), 换 hf-mirror 实测仓库"
+    # 进程级回退 (N0 档实跑: 已部署 :8888 Qwen3-0.6B GPU bf16 api)
+    FAST:
+      endpoint: "http://127.0.0.1:8888/v1"
+      model: "Qwen3-0.6B"
+      note: "N0 兜底: 顶替 Nemotron-3-Nano-4B 冒烟"
+    REASON:
+      endpoint: "http://127.0.0.1:8888/v1"
+      model: "Qwen3-0.6B"
+      note: "N0 兜底: 顶替 Lightning-30B-A3B 冒烟; 质量档降级"
+    VISION:
+      endpoint: "http://127.0.0.1:8888/v1"
+      model: "Qwen3-0.6B"
+      note: "N0 兜底: Omni 未部署, VLM 降级文本模型 + mock"
+    EMBED:
+      endpoint: "http://127.0.0.1:8888/v1"
+      model: "Qwen3-Embedding-0.6B"
+      note: "N0 兜底: NIM embed 未部署"
+    ASR:
+      endpoint: "http://127.0.0.1:8866"
+      model: "FunASR"
+      note: "N0 兜底: ASR 专档 nemotron-3.5-asr-streaming-0.6b (:8021) 未部署, 回退 FunASR"
+    DETERMINISTIC:
+      backend: timo-kernel
+      endpoint: "http://127.0.0.1:7862"
+      model: "calc_quote+ConflictChecker"
+      locked: true
+
+rag_layers:
+  enabled: true
+  # NIM embed 门禁绿后改为 EMBED_NIM 的 /v1
+  embed_url: "http://127.0.0.1:8888/v1"
+  vector_backend: file
+  timeout_s: 3
+  degrade_cooldown_s: 60
+
+guardrails:
+  backend: nemo_soft
+  input_block: [prompt_injection, data_exfiltration, dangerous_content, credential_leak]
+  tool_allowlist_enforced: true
+  output_external_send: draft_only
+
+funasr:
+  base_url: "http://127.0.0.1:8866"
+  asr_url: "http://127.0.0.1:8089"
+  vlm_url: "http://127.0.0.1:8888/v1"
+  embed_url: "http://127.0.0.1:8888/v1"
+  timeout_s: 30
+  allow_mock: true
+
+server:
+  host: "0.0.0.0"
+  workbench_port: 8900   # ⚠️ 非 8888: 8888 是 inference api_server (Qwen3-0.6B), 上方 :8888/v1 回退端点指向它
+  aux_port: 9000
+
+storage:
+  contexts_dir: "data/contexts"
+  audit_db: "data/audit.sqlite3"
+  crm_db: "data/crm.sqlite3"
+  artifacts_dir: "data/artifacts"
+  traces_dir: "data/traces"
+
+egress:
+  allow: false
+  channels:
+    smtp: false
+    webhook: false
+    imap: false

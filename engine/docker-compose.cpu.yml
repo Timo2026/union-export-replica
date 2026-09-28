@@ -1,0 +1,22 @@
+# ============================================================
+# 纯 CPU 部署覆盖层（无 GPU 环境）
+#
+# 用法：
+#   docker compose -f docker-compose.yml -f docker-compose.cpu.yml up -d --build
+#
+# 说明：主服务（FastAPI）不直接执行 GPU 推理，纯 CPU 镜像即可运行；
+#       INSTALL_STEP=1 仍安装 cadquery/cadquery-ocp（manylinux CPU wheel），
+#       保证 STEP 精确解析能力；若需进一步瘦身可改为 INSTALL_STEP: "0"，
+#       此时 STEP 上传降级为 trimesh 网格解析。
+# ============================================================
+
+version: "3.8"
+
+services:
+  cnc-ai-brain:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: python:3.11-slim
+        INSTALL_STEP: "1"

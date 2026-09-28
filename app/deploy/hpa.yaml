@@ -1,0 +1,71 @@
+# UEA — HPA + 监控清单
+# HPA 目标必须与 k8s.yaml 的 Deployment 同名: union-export-agent-api
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: union-export-agent-api
+  labels: {app: union-export-agent, component: api}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: union-export-agent-api
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: union-export-agent-api
+  labels: {app: union-export-agent, release: prometheus}
+spec:
+  selector:
+    matchLabels: {app: union-export-agent, component: api}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: union-export-agent-alerts
+  labels: {app: union-export-agent, release: prometheus}
+spec:
+  groups:
+    - name: uea-availability
+      rules:
+        - alert: UEAKernelOffline
+          expr: uea_kernel_online == 0
+          for: 10m
+          labels: {severity: warning}
+          annotations:
+            summary: "制造决策内核离线 (离线兜底路径生效)"
+            description: "kernel_online=0 超过 10 分钟; 报价走 offline 内核或 UNVERIFIED 降级。"
+        - alert: UEAHitlBacklog
+          expr: increase(uea_hitl_triggers_total[1h]) > 20
+          for: 15m
+          labels: {severity: warning}
+          annotations:
+            summary: "HITL 升级堆积"
+            description: "1 小时内 HITL 触发 >20; 人工在环队列可能积压。"
+        - alert: UEAEgressDeniedSpike
+          expr: increase(uea_egress_denied_total[15m]) > 5
+          for: 5m
+          labels: {severity: critical}
+          annotations:
+            summary: "出网被拒次数异常"
+            description: "铁律①: 存在尝试外发的调用被集中式主闸 DENY。"

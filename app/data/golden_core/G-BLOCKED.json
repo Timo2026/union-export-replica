@@ -1,0 +1,24 @@
+{
+  "id": "G-BLOCKED",
+  "expect_status": "BLOCKED",
+  "verification_status": "BLOCKED",
+  "state": "ARCHIVED",
+  "context_id": "RFQ-20260919-655C26",
+  "customer_id": "CUST-G03",
+  "quote": {
+    "unit_price": null,
+    "final_price": null,
+    "_source": null,
+    "hash": null
+  },
+  "engine_source": "offline:vendored-kernel(byte-identical)",
+  "multimodal_conflicts": [],
+  "reasons": [
+    "DFM 硬冲突: 304不锈钢自然钝化，不进行阳极氧化"
+  ],
+  "audit_valid": true,
+  "reply_subject": "Re: RFQ RFQ-20260919-655C26 — process clarification needed",
+  "auto_send": false,
+  "ok": true,
+  "ts": 1789830452.6203852
+}

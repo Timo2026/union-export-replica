@@ -1,0 +1,12 @@
+name: cnc-tool-life-estimate_basic
+description: cnc-tool-life-estimate基本工作流
+
+steps:
+  - name: execute
+    skill: cnc-tool-life-estimate
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

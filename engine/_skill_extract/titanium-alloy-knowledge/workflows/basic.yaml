@@ -1,0 +1,12 @@
+name: titanium-alloy-knowledge_basic
+description: titanium-alloy-knowledge基本工作流
+
+steps:
+  - name: execute
+    skill: titanium-alloy-knowledge
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

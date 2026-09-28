@@ -1,0 +1,12 @@
+name: design-dfm-knowledge-skill_basic
+description: design-dfm-knowledge-skill基本工作流
+
+steps:
+  - name: execute
+    skill: design-dfm-knowledge-skill
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

@@ -1,0 +1,59 @@
+# Union Manufacturing Export Agent — DGX Spark Profile B 运行时覆写
+# 对应 PRD §6.3 Profile B 启动序列。
+# 用法：上节点后用本文件覆写 config/settings.yaml 的差异项（或启动时 --settings 指定）。
+# 原则：本文件只列「与本地 Windows 环境不同」的字段，其余继承 settings.yaml。
+
+profile: dgx-spark-p0
+
+# ---- 制造决策内核：Windows 路径 → Linux 节点路径 ----
+# TODO(M1): 节点上 rsync 引擎源码后，按实际落点改这两行。
+# 推荐：把引擎放到节点 /workspace/_timo_engine/ 下，节点内重建 .venv（禁止假设 Windows Scripts/python.exe）。
+timo:
+  base_url: "http://127.0.0.1:7862"
+  timeout_s: 25
+  health_timeout_s: 4
+  engine_src: "/workspace/_timo_engine/Timo_CNC-AI-Brain-v12.0-Fusion"
+  engine_python: "/workspace/_timo_engine/Timo_CNC-AI-Brain-v12.0-Fusion/.venv/bin/python"
+  allow_fallback: true   # 节点引擎起不来 → byte-identical 离线兜底，必须显式标注
+
+# ---- 多模态：节点内若未起 funasr/vlm/embed，显式 MOCK，绝不冒充在线 ----
+# TODO(M3): 若节点拉起 NIM embedding，把 embed_url 指向节点推理服务 /v1。
+funasr:
+  base_url: "http://127.0.0.1:8866"
+  asr_url: "http://127.0.0.1:8089"
+  vlm_url: "http://127.0.0.1:1234"
+  embed_url: "http://127.0.0.1:1278"
+  timeout_s: 30
+  allow_mock: true   # 关键：节点缺算力时显式降级，PRD §10 风险条目
+
+# ---- Model Router：先全 local，M3 把 EMBED 或 FAST 其一切到 NIM/节点推理 ----
+model_router:
+  backend: local   # M3 验证后改 nvidia；禁止无证据宣称 nvidia
+  roles:
+    FAST:   { endpoint: "http://127.0.0.1:1234/v1", model: "qwen3.8-27b" }
+    VISION: { endpoint: "http://127.0.0.1:1234/v1", model: "qwen3.8-27b" }
+    REASON: { endpoint: "http://127.0.0.1:1234/v1", model: "qwen3.8-27b" }
+    EMBED:  { endpoint: "http://127.0.0.1:1278/v1", model: "bge-m3" }
+    ASR:    { endpoint: "http://127.0.0.1:8089",    model: "Qwen3-ASR-0.6B" }
+
+# ---- 服务监听：Spark 公网仅放行节点内 0.0.0.0:8900 与 0.0.0.0:9000 ----
+# Workbench/上传 API 绑 0.0.0.0:8900（PRD §6.2）；其余端口走 ssh -L 隧道。
+# ⚠️ 8900 而非 8888：8888 已被本机 ~/inference/api_server.py (Qwen3-0.6B) 占用，
+#    上面 model_router 的 :8888/v1 回退端点正是指向它 —— 同一端口两种用途必冲突。
+server:
+  host: "0.0.0.0"
+  workbench_port: 8900   # 公网映射 :89NN，评委可点 UI
+  aux_port: 9000         # 公网映射 :90NN，health/演示附属
+
+# ---- 存储：节点内相对路径（不要带 Windows 盘符）----
+storage:
+  contexts_dir: "data/contexts"
+  audit_db: "data/audit.sqlite3"
+  crm_db: "data/crm.sqlite3"
+  artifacts_dir: "data/artifacts"
+  traces_dir: "data/traces"
+
+# ---- 治理：Spark 上默认更收紧，egress 永久 DENY ----
+egress:
+  allow: false
+  channels: { smtp: false, webhook: false, imap: false }

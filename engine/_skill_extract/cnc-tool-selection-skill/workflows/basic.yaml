@@ -1,0 +1,12 @@
+name: cnc-tool-selection-skill_basic
+description: cnc-tool-selection-skill基本工作流
+
+steps:
+  - name: execute
+    skill: cnc-tool-selection-skill
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

@@ -1,0 +1,15 @@
+policy_id: skill-allowlist
+description: Dispatcher 可调用的 Skill 白名单
+version: 1
+allowed:
+  - parse_rfq
+  - extract_specs
+  - check_dfm
+  - calc_quote
+  - verify_gate
+  - write_reply
+  - submit_feedback
+  - render_thumbnail
+  - supplier_match
+  - golden_chain
+note: 与 services/skill_registry + guardrails.TOOL_ALLOWLIST 交叉校验; 不在白名单则拒绝调度

@@ -1,0 +1,12 @@
+name: cnc-fixture-design-skill_basic
+description: cnc-fixture-design-skill基本工作流
+
+steps:
+  - name: execute
+    skill: cnc-fixture-design-skill
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

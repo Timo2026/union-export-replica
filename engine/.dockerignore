@@ -1,0 +1,34 @@
+# ── 版本控制 ──
+.git
+.gitignore
+.github
+
+# ── 密钥 / 环境（严禁打入镜像）──
+.env
+.env.*
+!.env.example
+
+# ── 运行时数据（通过 docker-compose volume 挂载，无需 COPY）──
+data/
+logs/
+output/
+config/
+
+# ── 虚拟环境 / 缓存 ──
+.venv
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache
+
+# ── 交付与临时产物 ──
+PPT交付/
+*.log
+server_log.txt
+
+# ── 工具链 / 备份 ──
+.codeartsdoer
+.arts
+_skill_extract
+*.bak_*

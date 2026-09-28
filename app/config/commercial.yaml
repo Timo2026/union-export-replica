@@ -1,0 +1,78 @@
+# commercial.yaml — 确定性商业费率表 (freight / customs / Incoterms)
+# 这些是"商业真相", 全部来自配置, 不由 LLM 生成。修改这里即改定价策略。
+# 币种: CNY。费率可按真实货代/税则更新 (PRICE_UPDATE_DATE 对齐引擎)。
+
+price_update_date: "2026-09-17"
+currency: CNY
+
+# ---- 运输方式: 费率(元/计费kg) + 最低收费 + 时效(天) + 体积重除数(cm3/kg) ----
+shipping_modes:
+  express:                 # 国际快递 DHL/FedEx/UPS
+    vol_divisor: 5000
+    min_charge: 180
+    rate_by_region: {domestic: 12, asia: 45, europe: 62, north_america: 58, other: 70}
+    transit_days_by_region: {domestic: 2, asia: 4, europe: 6, north_america: 6, other: 8}
+  air:                     # 空运
+    vol_divisor: 6000
+    min_charge: 500
+    rate_by_region: {domestic: 8, asia: 26, europe: 34, north_america: 32, other: 40}
+    transit_days_by_region: {domestic: 2, asia: 5, europe: 8, north_america: 8, other: 10}
+  sea_lcl:                 # 海运拼箱
+    vol_divisor: 1000
+    min_charge: 800
+    rate_by_region: {domestic: 3, asia: 6, europe: 9, north_america: 9, other: 11}
+    transit_days_by_region: {domestic: 4, asia: 12, europe: 32, north_america: 28, other: 35}
+  sea_fcl:                 # 海运整柜 (按 kg 摊薄)
+    vol_divisor: 1000
+    min_charge: 3000
+    rate_by_region: {domestic: 2, asia: 4, europe: 6, north_america: 6, other: 8}
+    transit_days_by_region: {domestic: 4, asia: 12, europe: 30, north_america: 26, other: 33}
+
+# ---- 区域归类 (目的国 → region) ----
+region_map:
+  domestic: [CN, China]
+  asia: [JP, KR, SG, MY, TH, VN, IN, ID, PH]
+  europe: [DE, FR, GB, UK, IT, ES, NL, SE, PL, CH]
+  north_america: [US, CA, MX]
+  other: []                # 缺省归 other
+
+# ---- 关税: 材料类别 → 各区域进口关税率 ----
+tariff_by_material_region:
+  "6061": {domestic: 0.0,  asia: 0.05, europe: 0.06, north_america: 0.057, other: 0.08}
+  "7075": {domestic: 0.0,  asia: 0.05, europe: 0.06, north_america: 0.057, other: 0.08}
+  "304":  {domestic: 0.0,  asia: 0.04, europe: 0.05, north_america: 0.025, other: 0.07}
+  "316L": {domestic: 0.0,  asia: 0.04, europe: 0.05, north_america: 0.025, other: 0.07}
+  "TC4":  {domestic: 0.0,  asia: 0.03, europe: 0.04, north_america: 0.02,  other: 0.06}
+  "45钢": {domestic: 0.0,  asia: 0.05, europe: 0.06, north_america: 0.05,  other: 0.09}
+  "Q235": {domestic: 0.0,  asia: 0.05, europe: 0.06, north_america: 0.05,  other: 0.09}
+  "黄铜": {domestic: 0.0,  asia: 0.04, europe: 0.05, north_america: 0.03,  other: 0.07}
+  "_default": {domestic: 0.0, asia: 0.05, europe: 0.06, north_america: 0.05, other: 0.08}
+
+# ---- VAT/消费税 (完税价 = 货值+关税) ----
+vat_by_region: {domestic: 0.13, asia: 0.10, europe: 0.20, north_america: 0.0, other: 0.12}
+
+# ---- 小额免税阈值 (货值低于则关税/VAT 记为 0, 按区域) ----
+de_minimis_by_region: {domestic: 0, asia: 0, europe: 150, north_america: 800, other: 200}
+
+# ---- 保险费 (CIF/CIP/DDP 由卖方投保) ----
+insurance_pct_of_cif: 0.003   # 0.3% × (货值+运费)
+
+# ---- 固定操作费 ----
+handling:
+  origin_handling: 120        # 出口报关/单证/仓库操作 (卖方, FOB 起)
+  dest_handling: 200          # 目的港/清关代理操作 (DAP/DDP 卖方承担)
+
+# ---- Incoterms 2020: 卖方承担到哪一段 (决定卖方报价 = 货值 + 哪些附加) ----
+incoterms:
+  EXW: {seller_bears: [], note: "工厂交货, 买方承担全部运输/关税/保险"}
+  FOB: {seller_bears: [origin_handling, inland_freight], note: "装运港船上, 卖方到起运港"}
+  CIF: {seller_bears: [origin_handling, freight, insurance], note: "成本+保险+运费到目的港"}
+  DAP: {seller_bears: [origin_handling, freight, dest_handling], note: "目的地交货(不含进口税)"}
+  DDP: {seller_bears: [origin_handling, freight, insurance, dest_handling, duty, vat], note: "完税后交货, 卖方承担一切"}
+  default: FOB
+
+# ---- 交期 ----
+lead_time:
+  production_base_days: 3          # 与引擎报价 lead_time_days 对齐, 缺省用引擎值
+  qc_packing_days: 2               # 质检+包装
+  it4_it5_extra_days: 5            # 精密公差额外工序

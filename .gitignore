@@ -1,0 +1,76 @@
+# ===================== 秘密 / 本地配置（红线，绝不入库） =====================
+*.env
+.env
+.env.*
+node.env
+credentials/
+*.pem
+*.key
+id_rsa*
+.git-credentials
+secrets.json
+*credential*
+
+# 节点秘密冗余防线
+# 注意：这里不写节点 IP 前缀（写前缀 = 把前缀本身公开发布）。
+# 节点 IP / token / API-key 的通用扫描见 scripts/verify_replica.sh 第 2 节（不绑定任何前缀）。
+*TimoSpark*
+
+# ===================== 模型权重 / HF 缓存（大、data-stays-local） =====================
+*.safetensors
+*.gguf
+*.pth
+*.pt
+*.onnx
+hf-cache/
+.cache/huggingface/
+huggingface/
+
+# ===================== conda / node 二进制 =====================
+node_modules/
+envs/
+*.conda
+*.tar.gz
+
+# ===================== 运行时数据 / 日志 / 备份 =====================
+*.db
+*.sqlite3
+*.sqlite3-*
+data/mailbox/
+data/gmail_settings.json
+data/mail_puller/
+data/egress_gate.jsonl
+logs/
+*.log
+backup/
+重建*/
+backup-webui-*
+*.zip
+demo-freeze/
+
+# ===================== 编译 / 临时 =====================
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.DS_Store
+
+# JupyterLab 隐藏检查点(用 /lab 打开文件时自动生成, 非交付内容)
+.ipynb_checkpoints/
+
+# ===================== 交付包例外（放行：源码/测试夹具，均不含任何密钥） =====================
+# 上面第 12 行 *credential* 与第 47 行 *.zip 是粗粒度防线，误伤了下列"无密钥"文件；
+# 真正敏感的 data/credentials.json 仍被 *credential* + app/.gitignore 双重拦截，不会入库。
+# 注意：'#' 仅在行首才是注释，故下列模式必须独占一行，行尾不能再带说明文字。
+!app/services/credentials.py
+!app/tests/test_credentials.py
+!app/tests/fixtures/*.zip
+!app/deploy/nim/.env.example
+#   app/services/credentials.py    凭据加解密源码（密钥由机器种子现场派生，代码内无明文密钥）
+#   app/tests/test_credentials.py  上者的单测（凭据重定向到 tmp_path，不碰本机数据）
+#   app/tests/fixtures/*.zip       GBK 编码文件名入库测试夹具（非数据、无秘密）
+#   app/deploy/nim/.env.example    NIM 起服环境变量模板，值全为 placeholder；
+#                                  上方 *.env / .env.* 是粗粒度防线会误伤它，
+#                                  故放行。真值 .env 仍被 *.env 拦截。
+#                                  (tests/test_deploy_manifests.py 守护本文件存在与无真值)

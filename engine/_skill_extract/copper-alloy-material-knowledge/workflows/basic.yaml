@@ -1,0 +1,12 @@
+name: copper-alloy-material-knowledge_basic
+description: copper-alloy-material-knowledge基本工作流
+
+steps:
+  - name: execute
+    skill: copper-alloy-material-knowledge
+    capability: check
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

@@ -1,0 +1,13 @@
+# general_quote workflow (LLM 路径)
+- step: 1
+  skill: chat_understand
+  args:
+    intent: "$request"
+- step: 2
+  skill: rag_recall
+  args:
+    query: "$request"
+- step: 3
+  skill: skill_dispatch
+  args:
+    request: "$request"

@@ -1,0 +1,12 @@
+name: carbon-steel-material-knowledge_basic
+description: carbon-steel-material-knowledge基本工作流
+
+steps:
+  - name: execute
+    skill: carbon-steel-material-knowledge
+    capability: check
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-04-16T09:16:43.224541",
+  "total_samples": 49101,
+  "median_price": 36.52,
+  "price_range": [
+    1.0,
+    9999.0
+  ],
+  "quantity_gradient": {}
+}

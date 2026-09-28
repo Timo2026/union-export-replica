@@ -1,0 +1,22 @@
+{
+  "name": "unionskill-quote",
+  "version": "1.0.0",
+  "description": "UnionSkill CNC报价技能 — API驱动的智能制造报价工具",
+  "author": " OPC",
+  "license": "MIT",
+  "homepage": "http://127.0.0.1",
+  "api": {
+    "default_base": "http://127.0.0.1:8002/v1",
+    "fallback_base": "http://127.0.0.1:7862/api",
+    "key": "local-noauth",
+    "model": "nemotron-omni-30b-a3b"
+  },
+  "dependencies": {
+    "python": ">=3.10",
+    "pip": ["requests"],
+    "optional": {
+      "pythonOCC": "for STEP 3D model generation",
+      "Pillow": "for 2D drawing generation"
+    }
+  }
+}

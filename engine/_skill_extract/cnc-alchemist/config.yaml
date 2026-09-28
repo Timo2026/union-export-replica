@@ -1,0 +1,37 @@
+# CNC非标制造炼金术师配置文件
+# 禁止硬编码，所有路径动态检测
+
+backends:
+  # API自动检测，无需手动配置
+  api_base: "auto"  # auto表示自动检测11434/1234/8080端口
+
+models:
+  parser_model: "qwen2.5:3b"  # 特征解析模型
+  advisor_model: "qwen2.5:3b"  # 工艺建议模型
+
+hardware:
+  ram_threshold_gb:
+    lite: 16
+    standard: 40
+    showcase: 80
+  emergency_gb: 4
+  cpu_max: 90
+
+output_dir: "~/.openclaw/output"
+
+confidence:
+  min: 0.65
+  max: 0.90
+  weights:
+    geometry_success: 0.4
+    feature_completeness: 0.3
+    rag_match: 0.2
+    rule_check: 0.1
+
+ui:
+  port: 7860
+  title: "CNC非标制造炼金术师 v2.0"
+
+quote:
+  # 成本系数由data/material_db.json提供
+  db_path: "auto"  # auto表示自动查找data/material_db.json

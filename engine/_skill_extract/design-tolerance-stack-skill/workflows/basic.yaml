@@ -1,0 +1,12 @@
+name: design-tolerance-stack-skill_basic
+description: design-tolerance-stack-skill基本工作流
+
+steps:
+  - name: execute
+    skill: design-tolerance-stack-skill
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

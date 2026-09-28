@@ -1,0 +1,22 @@
+policy_id: local-only
+description: 数据不出车间 — 文件路径沙箱 + 本地端点
+version: 1
+file_paths:
+  allow_prefix:
+    - data/
+    - skills/
+    - config/
+    - webui/
+  deny_glob:
+    - "*.env"
+    - "**/.env*"
+    - "**/secret*"
+    - "**/id_rsa*"
+    - "C:/Windows/**"
+network:
+  deny_external: true
+  allow_hosts:
+    - 127.0.0.1
+    - localhost
+    - "::1"
+note: Skill 输入中的本地路径必须落在 allow_prefix; 否则 OpenShell violation

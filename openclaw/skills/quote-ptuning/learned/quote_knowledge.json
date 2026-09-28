@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-04-22T00:54:55.355338",
+  "quotes_count": 1,
+  "material_prices": {
+    "304不锈钢": {
+      "count": 1,
+      "avg_price": 120.00,
+      "min_price": 120.00,
+      "max_price": 120.00,
+      "avg_quantity": 20.0
+    }
+  },
+  "quantity_gradient": {
+    "11-20件": 120.00
+  },
+  "material_coefficients": {
+    "304不锈钢": 1.0
+  },
+  "base_material": "304不锈钢",
+  "base_avg_price": 120.00
+}

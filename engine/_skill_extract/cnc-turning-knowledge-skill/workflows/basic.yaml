@@ -1,0 +1,12 @@
+name: cnc-turning-knowledge-skill_basic
+description: cnc-turning-knowledge-skill基本工作流
+
+steps:
+  - name: execute
+    skill: cnc-turning-knowledge-skill
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

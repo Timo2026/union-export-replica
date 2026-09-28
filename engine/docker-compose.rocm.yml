@@ -1,0 +1,30 @@
+# ============================================================
+# AMD ROCm 部署覆盖层（比赛赛道重点）
+#
+# 用法（需已安装 ROCm 驱动的 AMD GPU）：
+#   docker compose -f docker-compose.yml -f docker-compose.rocm.yml up -d --build
+#
+# 等价 docker run 命令（注意 --device=/dev/kfd --device=/dev/dri）：
+#   docker run --device=/dev/kfd --device=/dev/dri --group-add video \
+#     -p 7862:7862 -v $PWD/data:/app/data cnc-ai-brain:rocm
+# ============================================================
+
+version: "3.8"
+
+services:
+  cnc-ai-brain:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: rocm/pytorch:rocm6.4
+    # ROCm 设备透传：/dev/kfd（计算）+ /dev/dri（渲染）
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      - video
+    # ROCm 容器常需放大共享内存 + 放开 seccomp
+    ipc: host
+    security_opt:
+      - seccomp=unconfined

@@ -1,0 +1,12 @@
+name: cnc-speed-feed-calculation-skill_basic
+description: cnc-speed-feed-calculation-skill基本工作流
+
+steps:
+  - name: execute
+    skill: cnc-speed-feed-calculation-skill
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

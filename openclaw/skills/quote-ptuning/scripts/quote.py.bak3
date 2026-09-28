@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Quote P-Tuning 报价脚本
+基于学习结果生成精准报价
+"""
+
+import os
+import sys
+import json
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+
+HOME = Path.home()
+CAD_RAG_DIR = HOME / ".openclaw" / "cad_rag"
+SKILL_DIR = HOME / ".openclaw" / "skills" / "quote-ptuning"
+
+# 默认成本参数 (可从学习结果覆盖)
+DEFAULT_PARAMS = {
+    "材料成本系数": {
+        "304不锈钢": 1.0,
+        "6061-T6": 0.85,
+        "铝合金": 0.75,
+        "碳钢": 0.65,
+    },
+    "表面处理系数": {
+        "阳极氧化黑色": 0.15,
+        "阳极氧化本色": 0.10,
+        "电镀": 0.20,
+        "喷砂": 0.08,
+        "抛光": 0.12,
+    },
+    "工时系数": {
+        "简单": 1.0,
+        "普通": 1.5,
+        "复杂": 2.5,
+    },
+    "利润系数": 0.25,  # 25% 利润
+}
+
+def load_learned_knowledge():
+    """加载学习结果"""
+    report_path = SKILL_DIR / "learned" / "quote_knowledge.json"
+    if report_path.exists():
+        with open(report_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return None
+
+def generate_quote(part_name, quantity, material="304不锈钢", surface="阳极氧化黑色", complexity="普通", weight_kg=None, machining_hours=None):
+    """生成报价"""
+    print("=" * 60)
+    print(f"Quote P-Tuning 报价生成")
+    print("=" * 60)
+    
+    knowledge = load_learned_knowledge()
+    
+    # 基础单价 (从知识库或默认值)
+    if knowledge and material in knowledge.get("material_prices", {}):
+        base_price = knowledge["material_prices"][material]["avg_price"]
+        print(f"\n【基于历史数据】")
+        print(f"   材料: {material}")
+        print(f"   历史均价: ¥{base_price:.2f}")
+    else:
+        # 使用默认值
+        base_price = 100.0  # 默认基准价
+        print(f"\n【使用默认参数】")
+    
+    # 数量梯度调整
+    if knowledge:
+        qty_gradient = knowledge.get("quantity_gradient", {})
+        if f"1-5件" in qty_gradient and quantity <= 5:
+            gradient_adj = 0.95  # 小批量略高
+        elif f"6-10件" in qty_gradient and quantity <= 10:
+            gradient_adj = 0.90
+        elif f"11-20件" in qty_gradient and quantity <= 20:
+            gradient_adj = 0.85
+        elif f"21-50件" in qty_gradient and quantity <= 50:
+            gradient_adj = 0.80
+        else:
+            gradient_adj = 0.75
+    else:
+        gradient_adj = 0.90 if quantity <= 10 else 0.80
+    
+    # 表面处理系数
+    surface_coef = DEFAULT_PARAMS["表面处理系数"].get(surface, 0.10)
+    surface_cost = base_price * surface_coef
+    
+    # 复杂度系数
+    complexity_coef = DEFAULT_PARAMS["工时系数"].get(complexity, 1.5)
+    
+    # 材料成本（基于重量）
+    material_cost = 0
+    if weight_kg is not None and weight_kg > 0:
+        material_cost = base_price * 0.3 * weight_kg
+
+    # 加工成本（基于工时）
+    machining_cost = 0
+    if machining_hours is not None and machining_hours > 0:
+        machining_cost = 80.0 * machining_hours * 0.7
+
+    # 明细模式
+    if weight_kg is not None or machining_hours is not None:
+        unit_price = base_price * gradient_adj * complexity_coef + surface_cost + material_cost + machining_cost
+    else:
+        unit_price = base_price * gradient_adj * complexity_coef + surface_cost
+    total_price = unit_price * quantity
+    
+    # 利润
+    profit = total_price * DEFAULT_PARAMS["利润系数"]
+    final_price = total_price + profit
+    
+    print(f"\n【报价明细】")
+    print(f"   零件: {part_name}")
+    print(f"   材料: {material}")
+    print(f"   表面: {surface}")
+    print(f"   复杂度: {complexity}")
+    print(f"   数量: {quantity}件")
+    print(f"   单价: ¥{unit_price:.2f}")
+    print(f"   小计: ¥{total_price:.2f}")
+    print(f"   利润(25%): ¥{profit:.2f}")
+    print(f"   总价: ¥{final_price:.2f}")
+    
+    return {
+        "part_name": part_name,
+        "material": material,
+        "surface": surface,
+        "quantity": quantity,
+        "unit_price": round(unit_price, 2),
+        "total_price": round(total_price, 2),
+        "profit": round(profit, 2),
+        "final_price": round(final_price, 2)
+    }
+
+def main():
+    if len(sys.argv) < 3:
+        print("用法: python3 quote.py <零件名称> <数量> [材料] [表面处理]")
+        print("示例: python3 quote.py 法兰盘 10 304不锈钢 阳极氧化黑色")
+        return
+    
+    part_name = sys.argv[1]
+    quantity = int(sys.argv[2])
+    material = sys.argv[3] if len(sys.argv) > 3 else "304不锈钢"
+    surface = sys.argv[4] if len(sys.argv) > 4 else "阳极氧化黑色"
+    weight_kg = float(sys.argv[5]) if len(sys.argv) > 5 else None
+    machining_hours = float(sys.argv[6]) if len(sys.argv) > 6 else None
+    
+    result = generate_quote(part_name, quantity, material, surface, weight_kg=weight_kg, machining_hours=machining_hours)
+    
+    if result:
+        print("\n✅ 报价生成完成!")
+
+if __name__ == "__main__":
+    main()

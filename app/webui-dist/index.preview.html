@@ -1,0 +1,27 @@
+<!doctype html>
+<!--
+  本地预览版（相对路径）。与 :8051 逐字节一致的原版是 index.html（用站点根绝对 /B/assets）。
+  本文件仅把资源改成相对 ./assets，供在 JupyterLab（/files/ 通道）里点开时能真正加载 JS/CSS。
+  打开：http://<你的:9051>/files/union-export-replica/app/webui-dist/index.preview.html
+  预期：整站 UI 可渲染；/v1/* 后端与 /B/assets/* 图片会 404（空态图缺失、数据为空），属正常。
+  原版 index.html 保持绝对 /B 不变，以维持与线上 :8051 的逐字节一致（md5 证据）。
+-->
+<html lang="zh-CN" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Union Export Agent · 工业非标外贸工作台（本地预览）</title>
+    <meta name="description" content="工业非标外贸 B 端工作台：客户邮箱、订单、STEP 图纸预览、多模态 RAG 检索、模型设置与本地状态" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="./assets/index-DSmUweh8.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BHMOvezJ.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

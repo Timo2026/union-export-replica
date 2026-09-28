@@ -1,0 +1,12 @@
+name: cad-step-rag_basic
+description: cad-step-rag基本工作流
+
+steps:
+  - name: execute
+    skill: cad-step-rag
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

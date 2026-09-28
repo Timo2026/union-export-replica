@@ -1,0 +1,12 @@
+name: cad-quote_basic
+description: cad-quote基本工作流
+
+steps:
+  - name: execute
+    skill: cad-quote
+    capability: quote
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

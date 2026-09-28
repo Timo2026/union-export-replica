@@ -1,0 +1,63 @@
+{
+  "uid": "uea-union-export-agent",
+  "title": "Union Export Agent — runtime & iron rules",
+  "tags": ["uea", "manufacturing", "agents"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": {"from": "now-6h", "to": "now"},
+  "templating": {
+    "list": [
+      {"name": "datasource", "type": "datasource", "query": "prometheus",
+       "current": {}, "hide": 0}
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Kernel online (铁律②: 定价只来自确定性内核)",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [{"refId": "A", "expr": "uea_kernel_online"}],
+      "fieldConfig": {"defaults": {"mappings": [
+        {"type": "value", "options": {"0": {"text": "OFFLINE", "color": "red"},
+                                       "1": {"text": "ONLINE", "color": "green"}}}
+      ]}}
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "calc_quote p50 / p95 (ms)",
+      "gridPos": {"h": 8, "w": 12, "x": 6, "y": 0},
+      "targets": [
+        {"refId": "A", "expr": "uea_calc_quote_p50_ms", "legendFormat": "p50"},
+        {"refId": "B", "expr": "uea_calc_quote_p95_ms", "legendFormat": "p95"}
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Verdict 分布 (PASS / HITL / BLOCKED) — 铁律③ 人工在环",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {"refId": "A", "expr": "uea_verdict_total{verdict=\"PASS\"}", "legendFormat": "PASS"},
+        {"refId": "B", "expr": "uea_verdict_total{verdict=\"HITL\"}", "legendFormat": "HITL"},
+        {"refId": "C", "expr": "uea_verdict_total{verdict=\"BLOCKED\"}", "legendFormat": "BLOCKED"}
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Egress denied (铁律①: 出网必须被 DENY)",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [{"refId": "A", "expr": "rate(uea_egress_denied_total[5m])", "legendFormat": "denied/s"}]
+    },
+    {
+      "id": 5,
+      "type": "barchart",
+      "title": "DFM C1–C6 冲突计数",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "targets": [{"refId": "A", "expr": "uea_dfm_conflicts_total", "legendFormat": "{{bucket}}"}]
+    }
+  ]
+}

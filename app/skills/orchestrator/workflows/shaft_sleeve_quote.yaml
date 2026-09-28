@@ -1,0 +1,30 @@
+# shaft_sleeve_quote workflow
+- step: 1
+  skill: parse_rfq
+  args:
+    email_text: "$request"
+- step: 2
+  skill: check_dfm
+  args:
+    rfq: "$rfq"
+- step: 3
+  skill: fleet_coordinator
+  args:
+    material: "6061"
+    shape: "bushing"
+    dimensions: "$dimensions"
+    quantity: 1
+    surface: "none"
+- step: 4
+  skill: verify_gate
+  args:
+    ctx_dict: "$ctx"
+- step: 5
+  skill: write_reply
+  args:
+    use_llm: false
+- step: 6
+  skill: quality_loop
+  args:
+    expert_results: "$experts"
+    loop_count: 0

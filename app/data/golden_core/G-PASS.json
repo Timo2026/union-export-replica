@@ -1,0 +1,22 @@
+{
+  "id": "G-PASS",
+  "expect_status": "PASS",
+  "verification_status": "PASS",
+  "state": "DONE",
+  "context_id": "RFQ-20260919-9D8CE9",
+  "customer_id": "CUST-G01",
+  "quote": {
+    "unit_price": 174.0,
+    "final_price": 2148.9,
+    "_source": "offline:calc_quote",
+    "hash": null
+  },
+  "engine_source": "offline:vendored-kernel(byte-identical)",
+  "multimodal_conflicts": [],
+  "reasons": [],
+  "audit_valid": true,
+  "reply_subject": "Quotation RFQ-20260919-9D8CE9 — 6061 10 pcs",
+  "auto_send": false,
+  "ok": true,
+  "ts": 1789830451.053462
+}

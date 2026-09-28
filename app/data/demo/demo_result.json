@@ -1,0 +1,16 @@
+{
+  "engine_source": "offline:kernel-absent(UNVERIFIED)",
+  "all_ok": false,
+  "skipped": true,
+  "skip_reason": "kernel-absent",
+  "kernel_probe": {
+    "state": "absent",
+    "online": false,
+    "kernel_available": false,
+    "source_label": "offline:kernel-absent(UNVERIFIED)",
+    "engine_src": "C:/Users/<user>/Desktop/比赛/英伟达第三/_timo_engine/Timo_CNC-AI-Brain-v12.0-Fusion - 副本",
+    "engine_python": "C:/Users/<user>/Desktop/比赛/英伟达第三/_timo_engine/Timo_CNC-AI-Brain-v12.0-Fusion - 副本/.venv/Scripts/python.exe",
+    "usable": false
+  },
+  "results": []
+}

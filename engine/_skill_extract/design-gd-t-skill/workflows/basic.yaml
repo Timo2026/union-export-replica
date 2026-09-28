@@ -1,0 +1,12 @@
+name: design-gd-t-skill_basic
+description: design-gd-t-skill基本工作流
+
+steps:
+  - name: execute
+    skill: design-gd-t-skill
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

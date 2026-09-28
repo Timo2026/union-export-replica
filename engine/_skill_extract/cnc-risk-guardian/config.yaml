@@ -1,0 +1,77 @@
+# cnc-risk-guardian v1.1 配置
+# 升级: 6维风险识别 + 模式检测
+
+## 模型配置
+model:
+  primary: "qwen2.5:3b"
+  fallback:
+    - "qwen2.5:1.8b"
+    - "qwen2.5:0.5b"
+  timeout_seconds: 30
+  retry_times: 3
+
+## Ollama配置
+ollama:
+  host: "http://localhost:11434"
+  endpoint: "/api/generate"
+
+## ==========================================
+## 6维风险阈值 (可调参数)
+## ==========================================
+
+# 维度1: 毛利率风险
+risk_thresholds:
+  danger_margin: 0.05   # <5% 亏损
+  warning_margin: 0.20   # 5%-20% 低利润
+
+# 维度2: 客户集中度
+customer_concentration:
+  warning_ratio: 0.60   # 单一客户占比>60%警告
+  danger_ratio: 0.80    # 单一客户占比>80%危险
+
+# 维度3: 恶性比价竞争 (AI才能做到!)
+predatory_pricing:
+  threshold: 0.40        # 报价 < 历史均价40% → 恶性比价
+  min_history_count: 3   # 至少需要3条历史数据才做判断
+
+# 维度4: 价格异常波动
+price_volatility:
+  warning_cv: 0.50       # 当前价 vs 历史价差异>50%警告
+  danger_cv: 0.80        # 差异>80%危险
+
+# 维度5: 批量折扣缺失
+batch_discount:
+  quantity_tiers: [50, 100, 500]  # 数量梯度
+  min_discount_ratio: 0.05  # 每梯度至少5%折扣
+  warning_missing_discount: true
+
+# 维度6: 材料替换风险
+material_substitution:
+  cost_increase_warning: 0.30   # 材料成本上升>30%警告
+  common_materials:
+    - ["SUS304", "304不锈钢"]
+    - ["SUS316L", "316不锈钢"]
+    - ["AL6061", "铝合金6061"]
+    - ["AL7075", "铝合金7075"]
+
+## 材料成本库 (参考价,元/kg)
+knowledge:
+  material_cost: "knowledge/material_cost.json"
+  process_coefficient: "knowledge/process_coefficient.json"
+  price_history: "knowledge/price_history.json"
+
+## 输出配置
+output:
+  excel_template: "templates/report_template.xlsx"
+  json_schema: "risk_report_v1.1.json"
+
+## 集成组件
+dependencies:
+  - hexagram-llm-bridge
+  - output-bundler
+  - material-cost-per-kg
+
+---
+version: 1.1.0
+created: 2026-04-29
+note: "从公式计算升级为6维模式识别,AI能做Excel不能的事"

@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# 运行时状态（铁律①：数据留本地，且不入库/不入交付包）
+data/*.sqlite3
+data/*.sqlite3-*
+data/credentials.json
+data/gmail_settings.json
+data/skill_audit.jsonl
+data/egress_gate.jsonl
+data/mailbox/
+data/contexts/
+data/traces/
+data/artifacts/
+data/backups/
+data/crm_sandboxes/
+data/exports/
+data/logs/
+
+# 密钥与环境
+.env
+*.pem
+*.key
+deploy/nim/.env
+
+# 编辑器 / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# Windows 源机残留（本仓库在 Linux 上开发，绝不能让 C:\ 路径被提交）
+C:*/
+
+# 大体积外部工具（README 已声明 6.4G 有意排除）
+tools/
+
+# 文档生成产物
+docs/e2e_l3/*.png

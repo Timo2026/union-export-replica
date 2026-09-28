@@ -1,0 +1,20 @@
+# ============================================================
+# 完整 STEP 精确几何解析依赖（增强层）
+#
+# 来源：environment.yml 中 name: step-render 的 pip 部分，
+#       对应 conda 环境里的 OCP(OpenCASCADE) + cadquery + cascadion。
+# 本文件仅声明 requirements.txt 未覆盖的增强依赖，二者叠加等价于
+# conda step-render 环境的 Python 包清单。
+#
+# Dockerfile 通过 ARG INSTALL_STEP=1 控制是否安装本文件；
+# 不安装时（INSTALL_STEP=0），STEP 上传自动降级为 trimesh 网格解析。
+# ============================================================
+
+# 3D 精确几何：OCP(OpenCASCADE 内核 Python 绑定) + cadquery 参数化建模
+cadquery>=2.4
+cadquery-ocp>=7.7
+# 铸造/机加工件几何特征库（本项目 STEP 解析核心适配器）
+cascadion>=0.1.1
+# DXF 图纸解析 + Excel 报表（报价表）
+ezdxf>=1.4
+openpyxl>=3.1

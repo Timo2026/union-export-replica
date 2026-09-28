@@ -1,0 +1,22 @@
+# summarize.yaml — 会话/询盘摘要提示 (专项提示优化, 维度2.3)
+name: summarize
+version: 1
+task: 把客户往来/询盘压缩成结构化摘要, 供 Context 注入(不塞全文)
+
+system: |
+  你是外贸会话摘要器。把输入压缩成要点式摘要, 保留: 客户诉求、关键参数、承诺、未决问题、风险。
+  只输出 JSON: {"summary": str, "key_points": [str], "open_questions": [str], "risks": [str]}。
+  不臆测, 不添加输入中没有的信息。
+
+user_template: |
+  会话/询盘:
+  """{text}"""
+  输出结构化摘要 JSON。
+
+few_shot:
+  - input: "Hi, need 50 pcs 6061 anodized brackets 100x50x10 IT7. Also the critical bore can relax to 0.05. When can you deliver?"
+    output:
+      summary: "客户询 50 件 6061 阳极氧化支架(IT7), 提出关键孔径可放宽到 0.05, 并问交期。"
+      key_points: ["50 pcs 6061 anodizing IT7", "关键孔径拟放宽 0.05mm", "关注交期"]
+      open_questions: ["公差放宽是否正式变更", "目标交期"]
+      risks: ["邮件±0.02 与口头0.05 可能冲突, 需 HITL"]

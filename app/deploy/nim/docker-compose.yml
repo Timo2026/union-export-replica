@@ -1,0 +1,68 @@
+# UEA — NVIDIA NIM 推理编排 (Track D)
+# ⚠️ 平台注意: DGX Spark 是 aarch64; NIM 官方镜像部分模型缺 linux/arm64 manifest。
+#    Spark 上首选 NemoClaw managed vLLM 路由; 本文件保留 NIM 路线供 x86_64 / 有 arm64 manifest 的模型使用。
+#    在 Spark 上用 NIM 需 NEMOCLAW_EXPERIMENTAL=1, 属实验路径, 不接受 SLA。
+# 铁律①: 凭据只以 list 形式透传宿主环境变量 NGC_API_KEY=${NGC_API_KEY}, 文件内绝不出现真值。
+name: uea-nim
+
+x-nim-common: &nim-common
+  image: nvcr.io/nim/nvidia
+  runtime: nvidia
+  environment:
+    # list 形式 = 原样透传宿主环境变量 (docker compose 的 env 展开), 不重命名不落值
+    - "NGC_API_KEY=${NGC_API_KEY}"
+    - "NVIDIA_VISIBLE_DEVICES=all"
+    - "NIM_CACHE_PATH=/opt/nim/.cache"
+  volumes:
+    - nim-cache:/opt/nim/.cache
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: 1
+            capabilities: ["gpu"]
+
+services:
+  # 小模型: 意图分类 / 抽取 (FAST 角色)
+  nim-nano-4b:
+    <<: *nim-common
+    container_name: uea-nim-nano-4b
+    environment:
+      - "NGC_API_KEY=${NGC_API_KEY}"
+      - "NIM_MODEL_NAME=nvidia/nemotron-mini-4b-instruct"
+    ports:
+      - "127.0.0.1:8001:8000"
+
+  # 大模型: 推理/报价解释 (REASON 角色) — 绝不参与定价 (铁律②)
+  nim-lightning:
+    <<: *nim-common
+    container_name: uea-nim-lightning
+    environment:
+      - "NGC_API_KEY=${NGC_API_KEY}"
+      - "NIM_MODEL_NAME=nvidia/llama-3.3-nemotron-super-49b-v1"
+    ports:
+      - "127.0.0.1:8002:8000"
+
+  # 多模态: 图纸/邮件附件理解 (VISION 角色)
+  nim-omni:
+    <<: *nim-common
+    container_name: uea-nim-omni
+    environment:
+      - "NGC_API_KEY=${NGC_API_KEY}"
+      - "NIM_MODEL_NAME=nvidia/nemotron-4-340b-instruct"
+    ports:
+      - "127.0.0.1:8003:8000"
+
+  # 向量: RAG 记忆层检索 (EMBED 角色)
+  nim-embed:
+    <<: *nim-common
+    container_name: uea-nim-embed
+    environment:
+      - "NGC_API_KEY=${NGC_API_KEY}"
+      - "NIM_MODEL_NAME=nvidia/nv-embedqa-e5-v5"
+    ports:
+      - "127.0.0.1:8004:8000"
+
+volumes:
+  nim-cache:

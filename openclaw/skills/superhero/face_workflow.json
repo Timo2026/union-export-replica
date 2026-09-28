@@ -1,0 +1,101 @@
+{
+  "1": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "flux1-dev-fp8.safetensors"
+    }
+  },
+  "2": {
+    "class_type": "PulidFluxModelLoader",
+    "inputs": {
+      "pulid_file": "pulid_flux_v0.9.1.safetensors"
+    }
+  },
+  "3": {
+    "class_type": "PulidFluxInsightFaceLoader",
+    "inputs": {
+      "provider": "CPU"
+    }
+  },
+  "4": {
+    "class_type": "PulidFluxEvaClipLoader",
+    "inputs": {}
+  },
+  "5": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "__FACE_IMAGE__"
+    }
+  },
+  "6": {
+    "class_type": "ApplyPulidFlux",
+    "inputs": {
+      "model": ["1", 0],
+      "pulid_flux": ["2", 0],
+      "eva_clip": ["4", 0],
+      "face_analysis": ["3", 0],
+      "image": ["5", 0],
+      "weight": 1.0,
+      "start_at": 0.0,
+      "end_at": 1.0
+    }
+  },
+  "7": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": ["1", 1],
+      "text": "Dynamic action shot of a superhero flying over a sunlit city, wearing a bright white and green suit with a full flowing white and green cape, face clearly visible, looking forward with confident heroic expression, arms slightly forward in flight pose, golden afternoon sunlight, soft rim lighting on face, shallow depth of field background, city buildings below, white clouds, cinematic color grading, sharp facial details, photorealistic, 8k"
+    }
+  },
+  "8": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": ["1", 1],
+      "text": "ugly, deformed, blurry, low quality, watermark, text, logo, bad anatomy, extra limbs, disfigured, mutation, poorly drawn face, static pose, standing still, indoor, dark lighting, harsh shadows on face, obscured face, back facing camera, cartoon, anime, painting, sketch"
+    }
+  },
+  "9": {
+    "class_type": "FluxGuidance",
+    "inputs": {
+      "conditioning": ["7", 0],
+      "guidance": 4.0
+    }
+  },
+  "10": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    }
+  },
+  "11": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["6", 0],
+      "positive": ["9", 0],
+      "negative": ["8", 0],
+      "latent_image": ["10", 0],
+      "seed": 0,
+      "steps": 24,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+    }
+  },
+  "12": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["11", 0],
+      "vae": ["1", 2]
+    }
+  },
+  "13": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": ["12", 0],
+      "filename_prefix": "superhero"
+    }
+  }
+}

@@ -1,0 +1,74 @@
+# Union Export Agent — deterministic business policy (L8 Control Plane)
+# 这些是"业务真相", 不交给 LLM。Verification / State Machine 依此裁决。
+
+# ---- 精度等级 → 风险分级 (S5: TC4+IT5 → HITL) ----
+tolerance:
+  economic_grades: [IT7, IT8, IT9, IT10]     # 常规 CNC 经济公差 → 可自动
+  precision_grades: [IT4, IT5, IT6]          # 超经济公差 → 需精密磨削/慢走丝 → HITL
+  hitl_grades: [IT4, IT5]                    # 强制人工复核 (对齐验收集 S5)
+
+# ---- 毛利红线 (止: 熔断) ----
+margin:
+  floor_pct: 15.0          # 毛利率低于此 → BLOCKED
+  target_pct: 30.0
+  review_below_pct: 20.0   # 低于此 → HITL 商务确认
+
+# ---- 金额门禁 (对齐 main_lite AMOUNT_GATE_THRESHOLD 思想) ----
+amount_gate:
+  unit_price_review_cny: 12000.0   # 单件报价超此 → 商务确认 HITL
+  total_price_review_cny: 100000.0
+
+# ---- DFM 硬冲突 (辟) ----
+dfm:
+  hard_conflict_action: BLOCKED    # conflict_check.valid==false → 直接 BLOCKED
+  warning_action: HITL             # 仅 warning → 人工确认
+
+# ---- 多模态冲突 (M1: Voice↔Email 关键尺寸不一致) ----
+multimodal:
+  conflict_action: HITL
+  never_silent_overwrite: true
+  tolerance_delta_mm: 0.005        # 关键尺寸差异超此阈值 → VOICE_EMAIL_CONFLICT
+
+# ---- HITL 门禁总则 ----
+hitl:
+  auto_send_allowed_only_when:
+    - no_dfm_hard_conflict
+    - no_multimodal_conflict
+    - margin_above_floor
+    - tolerance_not_precision
+    - amount_below_gate
+    - evidence_sufficient
+
+# ---- 外部发送策略 ----
+external_send:
+  require_approval_when: [high_value, precision, conflict, blocked]
+  default: draft_only          # 默认只生成草稿, 不自动发信
+
+# ---- v2.3.0 自动报价阈值 (叠加非替换) ----
+# 几何特征数 + 工艺路线步数 双双小于阈值 → 可走 AUTO 路径；
+# 与现有 IT4/IT5/毛利/金额/缺失项/多模态冲突 HITL 是叠加关系（任一不满足仍 HITL）。
+# features_count 来自 step-analysis 的 C1 特征（hole_count 等）。
+# process_route_count 来自报价内核的 process_route 字段（若无则按 0）。
+auto_quote_threshold:
+  features_count_max: 10
+  process_route_max: 10
+
+# ---- 客户飞轮配置 (v6.1) ----
+flywheel:
+  pricing:
+    enabled: true
+    learning_rate: 0.1
+    min_history: 3
+    max_adjustment_pct: 5.0
+    default_margin: 25.0
+  followup:
+    enabled: true
+    auto_suggest: true
+  retention:
+    enabled: true
+    auto_adjust_on_loss: true
+    knowledge_feedback: true
+  sandbox:
+    enabled: true
+    isolation_level: full
+    cross_reference_allowed: false

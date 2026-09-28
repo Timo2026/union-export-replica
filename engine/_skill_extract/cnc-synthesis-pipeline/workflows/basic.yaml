@@ -1,0 +1,12 @@
+name: cnc-synthesis-pipeline_basic
+description: cnc-synthesis-pipeline基本工作流
+
+steps:
+  - name: execute
+    skill: cnc-synthesis-pipeline
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

@@ -1,0 +1,12 @@
+name: optimal-cnc-quote-combo_basic
+description: optimal-cnc-quote-combo基本工作流
+
+steps:
+  - name: execute
+    skill: optimal-cnc-quote-combo
+    capability: quote
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

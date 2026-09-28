@@ -1,0 +1,35 @@
+# Union CNC AI Brain — conda 环境（step-render）
+# 含 STEP 精确几何解析所需依赖：OCP(OpenCASCADE) + cadquery + trimesh + cascadion + ezdxf
+#
+# 创建: conda env create -f environment.yml
+# 激活: conda activate step-render
+# 更新: conda env update -f environment.yml --prune
+
+name: step-render
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      # Web 服务
+      - fastapi>=0.110
+      - uvicorn>=0.29
+      - python-multipart>=0.0.9
+      - pyyaml>=6.0
+      - psutil>=5.9
+      # 数值计算
+      - numpy>=1.26
+      # 3D 几何
+      - trimesh>=4.0
+      - cadquery>=2.4
+      - cadquery-ocp>=7.7
+      - cascadion>=0.1.1
+      # 图纸解析
+      - ezdxf>=1.4
+      - openpyxl>=3.1
+      # 测试
+      - pytest>=7.4
+      - pytest-asyncio
+      - httpx

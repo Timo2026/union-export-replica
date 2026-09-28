@@ -1,0 +1,78 @@
+{
+  "customers": {
+    "A": {
+      "first_outcome_event": {
+        "id": 1,
+        "context_id": "RFQ-A1",
+        "customer_id": "CUST-A",
+        "material": "6061",
+        "surface": "anodizing",
+        "quoted_unit_price": 10.0,
+        "actual_unit_cost": 12.0,
+        "deviation_pct": 20.0,
+        "outcome": "won",
+        "calibration_action": "price_up_pct_3",
+        "confidence": 0.5
+      },
+      "calibration_adjustments": {
+        "bias_pct": 10.0,
+        "confidence": 0.85,
+        "sample_count": 3,
+        "avg_deviation_pct": 16.67,
+        "recommendation": "price_up",
+        "low_confidence": false,
+        "cannot_override_price": true
+      },
+      "flywheel_state_before": {
+        "customer_id": "CUST-A",
+        "health_score": 45.5,
+        "churn_risk": null,
+        "price_bias_pct": null
+      },
+      "flywheel_state_after": {
+        "customer_id": "CUST-A",
+        "health_score": 45.5,
+        "churn_risk": null,
+        "price_bias_pct": null
+      },
+      "history_quote_n": 3,
+      "history_postmortem_notes": [],
+      "quote_source": "timo-offline (铁律①: overlay 不改 final_price)",
+      "overlay_policy": "off — bias 仅作证据/提案注入 Context",
+      "followup_scheduled": {
+        "id": 1,
+        "pending": [
+          {
+            "id": 1,
+            "customer_id": "CUST-A",
+            "context_id": "RFQ-A1",
+            "scheduled_at": 1790040667.0840187,
+            "channel": "email",
+            "intent": "gentle_nudge",
+            "condition": "no_response",
+            "status": "pending",
+            "nlg_variant": "default"
+          }
+        ],
+        "draft_only": true
+      }
+    }
+  },
+  "sandbox_isolation": {
+    "B_history_n": 1,
+    "B_postmortem_notes": [],
+    "B_calibration_samples": 0,
+    "A_notes_visible_to_B": false,
+    "B_sees_A_bias": false,
+    "pass": true
+  },
+  "ts": 1789954266.9486804,
+  "metrics": {
+    "MAPE_repeat_A": 20.0,
+    "note": "A 系统性报价偏低 → bias_pct 应 >0 (提案)",
+    "bias_A": 10.0,
+    "confidence_A": 0.85,
+    "sample_count_A": 3
+  },
+  "all_ok": true
+}

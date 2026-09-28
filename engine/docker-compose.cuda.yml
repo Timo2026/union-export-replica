@@ -1,0 +1,29 @@
+# ============================================================
+# NVIDIA CUDA 部署覆盖层
+#
+# 前置：安装 NVIDIA Container Toolkit（nvidia-container-toolkit）
+# 用法：
+#   docker compose -f docker-compose.yml -f docker-compose.cuda.yml up -d --build
+#
+# 等价 docker run 命令：
+#   docker run --gpus all -p 7862:7862 -v $PWD/data:/app/data cnc-ai-brain:cuda
+# ============================================================
+
+version: "3.8"
+
+services:
+  cnc-ai-brain:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # 含 CUDA 12.1 + cuDNN 的 PyTorch 官方镜像
+        BASE_IMAGE: pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime
+    # 透传全部 NVIDIA GPU（Compose 规范标准写法，等价 docker run --gpus all）
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

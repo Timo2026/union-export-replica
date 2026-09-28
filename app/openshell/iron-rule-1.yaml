@@ -1,0 +1,21 @@
+policy_id: iron-rule-1
+description: 确定性工具拒绝 LLM/Director override (铁律①工程化)
+version: 1
+applies_to:
+  - check_dfm
+  - calc_quote
+  - verify_gate
+  - parse_rfq
+  - golden_chain
+  - supplier_match
+  - render_thumbnail
+  - submit_feedback
+enforce:
+  - skill.output 在 dispatch 记录后不可被 LLM/Dispatcher 二次改写
+  - calc_quote 的 unit_price/final_price 必须来自 Timo 内核返回值 (sha256 比对)
+  - check_dfm 的 conflicts/valid 必须来自 ConflictChecker, 不接受 LLM 补丁
+  - risk_score > 0.7 或 quote_total 超金额门禁 → 触发 hitl-required
+audit:
+  - 所有 iron-rule Skill 调用必须写入 skill_audit (含 output_sha256)
+  - 试图修改 locked 输出 → 记 violation 并拒绝该次 dispatch 返回
+locked: true

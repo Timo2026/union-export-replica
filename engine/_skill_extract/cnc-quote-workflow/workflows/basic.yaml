@@ -1,0 +1,12 @@
+name: cnc-quote-workflow_basic
+description: cnc-quote-workflow基本工作流
+
+steps:
+  - name: execute
+    skill: cnc-quote-workflow
+    capability: quote
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

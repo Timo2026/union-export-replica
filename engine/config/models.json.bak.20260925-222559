@@ -1,0 +1,208 @@
+{
+  "//": "Union CNC AI Model Config — MTClaw Function Router 作为上游 LLM Provider",
+  "//fallback": "function_router > cloud > local > rule_engine",
+  "//vendor": "硬件厂商(vendor)字段: musa=摩尔线程MUSA | nvidia=CUDA | amd=ROCm | cpu=纯CPU | any=硬件无关。探测见 environment_detector.detect_vendor()，路由见 model_auto_loader.route()，端口/地址均支持 ${VAR} 与 ${VAR:-default} 环境变量覆盖(禁止硬编码)",
+  "//integration": "A方案: cnc-ai-brain LLM调用 base_url 指向本地 MTClaw Function Router(:7863/v1), 命中CNC工具走加速路径, 未命中透明转发上游",
+  "preference": "local",
+  "ollama_default": "qwen2.5:1.5b",
+  "cloud": [
+    {
+      "name": "mtclaw-fr",
+      "provider": "openai",
+      "vendor": "any",
+      "api_key": "fr-local",
+      "api_url": "http://127.0.0.1:7863/v1",
+      "model_id": "fr-routed",
+      "quality_score": 101,
+      "param_count": 200,
+      "description": "MTClaw Function Router 本地路由(provider proxy), CNC垂类工具加速"
+    },
+    {
+      "name": "opc-auto",
+      "provider": "openai",
+      "vendor": "any",
+      "api_url": "${OPC_API_URL:-http://127.0.0.1:9/v1}",
+      "api_key": "${OPC_API_KEY}",
+      "model_id": "opc-auto",
+      "quality_score": 95,
+      "param_count": 200,
+      "description": "OPC Cloud API (FR降级fallback)"
+    }
+  ],
+  "local": [
+    {
+      "name": "qwen3-8b-gptq",
+      "provider": "openai",
+      "vendor": "musa",
+      "api_key": "none",
+      "api_url": "http://127.0.0.1:32102/v1",
+      "model_id": "musachat_local",
+      "quality_score": 100,
+      "param_count": 8,
+      "source": "local",
+      "max_context_len": 8192,
+      "description": "Qwen3-8B GPTQ vLLM MUSA M1000 (本机32102, 默认首选, 无思考模式)"
+    },
+    {
+      "name": "vllm-musa-qwen",
+      "provider": "openai",
+      "vendor": "musa",
+      "api_key": "none",
+      "api_url": "http://127.0.0.1:8000/v1",
+      "model_id": "qwen2.5-7b-gptq",
+      "quality_score": 98,
+      "param_count": 7,
+      "source": "local",
+      "max_context_len": 2048,
+      "context_note": "vLLM --max-model-len 2048 当前值，目标按任务4提升至 64K/260K",
+      "description": "vLLM MUSA M1000 GPU (Qwen2.5-7B GPTQ, 本机部署, 默认本地首选端口8000)"
+    },
+    {
+      "name": "qwen3.6-35b-a3b",
+      "provider": "openai",
+      "vendor": "any",
+      "api_key": "lm-studio",
+      "api_url": "http://127.0.0.1:1234/v1",
+      "model_id": "qwen/qwen3.6-35b-a3b",
+      "quality_score": 92,
+      "param_count": 35,
+      "description": "Qwen3.6-35B-A3B local LMStudio (OpenAI兼容, 中文原生MoE)"
+    },
+    {
+      "name": "gpt-oss-120b",
+      "provider": "openai",
+      "vendor": "cpu",
+      "api_key": "none",
+      "api_url": "http://localhost:1250/v1",
+      "model_id": "gpt-oss-120b-mxfp4-00001-of-00003.gguf",
+      "quality_score": 70,
+      "param_count": 120,
+      "description": "gpt-oss-120b local llamacpp (offline)"
+    },
+    {
+      "name": "MiniMax-M2.7-UD",
+      "provider": "openai",
+      "vendor": "cpu",
+      "api_key": "none",
+      "api_url": "http://127.0.0.1:1280/v1",
+      "model_id": "MiniMax-M2.7-UD-IQ3_XXS-00001-of-00003",
+      "quality_score": 65,
+      "param_count": 50,
+      "description": "MiniMax local (offline)"
+    }
+  ],
+  "ollama": {
+    "//auto_detected": true
+  },
+  "selection_rules": {
+    "expert_meeting": {
+      "min_quality": 0,
+      "prefer": "cloud"
+    },
+    "chat": {
+      "min_quality": 0,
+      "prefer": "cloud"
+    }
+  },
+  "ollama_blocklist": [
+    "qwen3:4b",
+    "llama3.2:1b"
+  ],
+  "vendor_routing": {
+    "//": "硬件厂商→后端路由说明。探测见 environment_detector.detect_vendor()，路由见 model_auto_loader.route()。所有端口/地址均以 ${VAR} 与 ${VAR:-default} 环境变量驱动，禁止在代码中写死。",
+    "musa": {
+      "backend": "vllm_musa",
+      "description": "摩尔线程 MUSA M1000 → 本地 vLLM MUSA (OpenAI 兼容端点 32102/8000)",
+      "endpoints": [
+        "${VLLM_MUSA_BASE:-http://127.0.0.1:32102/v1}",
+        "${VLLM_MUSA_ALT_BASE:-http://127.0.0.1:8000/v1}"
+      ],
+      "preferred_vendors": [
+        "musa",
+        "any"
+      ]
+    },
+    "nvidia": {
+      "backend": "vllm_cuda",
+      "description": "NVIDIA CUDA → vLLM/llama.cpp CUDA 后端 (端点用环境变量 VLLM_CUDA_BASE 配置)",
+      "endpoints": [
+        "${VLLM_CUDA_BASE:-http://127.0.0.1:8000/v1}"
+      ],
+      "preferred_vendors": [
+        "nvidia",
+        "any"
+      ]
+    },
+    "amd": {
+      "backend": "vllm_rocm",
+      "description": "AMD ROCm → vLLM ROCm 后端 (端点用环境变量 VLLM_ROCM_BASE 配置)",
+      "endpoints": [
+        "${VLLM_ROCM_BASE:-http://127.0.0.1:8000/v1}"
+      ],
+      "preferred_vendors": [
+        "amd",
+        "any"
+      ]
+    },
+    "cpu": {
+      "backend": "ollama_or_llamacpp_cpu",
+      "description": "纯 CPU → Ollama / llama.cpp 纯 CPU 推理，再兜底云端 API",
+      "endpoints": [
+        "${OLLAMA_URL:-http://localhost:11434}"
+      ],
+      "preferred_vendors": [
+        "cpu",
+        "any"
+      ]
+    }
+  },
+  "models": [
+    {
+      "source": "cloud",
+      "provider": "openai",
+      "api_url": "https://api.stepfun.com/step_plan/v1",
+      "api_key": "${STEPFUN_API_KEY}",
+      "model_id": "step-3.7-flash",
+      "quality_score": 99,
+      "vendor": "any",
+      "name": "step-3.7-flash"
+    },
+    {
+      "source": "cloud",
+      "provider": "openai",
+      "api_url": "https://api.stepfun.com/step_plan/v1",
+      "api_key": "${STEPFUN_API_KEY}",
+      "model_id": "step-3.7-flash",
+      "quality_score": 95,
+      "vendor": "any",
+      "name": "step-3.7-flash"
+    },
+    {
+      "source": "local",
+      "provider": "openai",
+      "api_url": "http://127.0.0.1:1234/v1",
+      "api_key": "lm-studio",
+      "model_id": "qwen3.8-27b",
+      "quality_score": 97,
+      "vendor": "any",
+      "name": "qwen3.8-27b"
+    }
+  ],
+  "runtime": {
+    "timeout": 30,
+    "retry": 2
+  },
+  "vlm": {
+    "//": "多模态VLM配置 — 图片/PDF视觉理解 (OpenAI兼容协议)",
+    "api_url": "http://127.0.0.1:1234/v1",
+    "model_id": "minicpm-v-4_5",
+    "api_key": "lm-studio",
+    "max_tokens": 800
+  },
+  "upload": {
+    "//": "通用上传端点 /api/upload 配置",
+    "max_zip_depth": 3,
+    "max_zip_files": 50,
+    "vlm_prompt": "提取图纸中的零件参数，只输出JSON禁止解释: {\"part_type\":\"flange|sleeve|shaft|plate|box|bracket|null\",\"params\":{\"od\":外径mm,\"id\":内径mm,\"thickness\":厚度mm,\"bolt_holes\":孔数,\"bolt_d\":孔径mm,\"bolt_pcd\":分度圆mm},\"material\":\"材料牌号或null\",\"quantity\":件数或null}"
+  }
+}

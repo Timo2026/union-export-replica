@@ -1,0 +1,12 @@
+name: alloy-steel-material-knowledge_basic
+description: alloy-steel-material-knowledge基本工作流
+
+steps:
+  - name: execute
+    skill: alloy-steel-material-knowledge
+    capability: check
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

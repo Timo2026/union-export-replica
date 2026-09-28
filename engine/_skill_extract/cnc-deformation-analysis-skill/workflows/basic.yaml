@@ -1,0 +1,12 @@
+name: cnc-deformation-analysis-skill_basic
+description: cnc-deformation-analysis-skill基本工作流
+
+steps:
+  - name: execute
+    skill: cnc-deformation-analysis-skill
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

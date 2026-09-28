@@ -1,0 +1,54 @@
+{
+  "scenarios": [
+    {
+      "id": "S1",
+      "desc": "6061 x50 + anodizing -> DONE",
+      "expect_state": "DONE",
+      "expect_status": "PASS",
+      "customer": {"customer_id": "CUST-0001", "name": "Northwind Robotics", "contact_name": "Alice", "country": "US"},
+      "email": "Hi, please quote 50 pcs of 6061 aluminum motor brackets, 100x50x10mm, anodizing finish, general tolerance IT7. Thanks!"
+    },
+    {
+      "id": "S2",
+      "desc": "TC4 x10 -> DONE",
+      "expect_state": "DONE",
+      "expect_status": "PASS",
+      "customer": {"customer_id": "CUST-0002", "name": "AeroTitan GmbH", "contact_name": "Bruno", "country": "DE"},
+      "email": "Hello, we need 10 pcs TC4 titanium spacers, 80x40x15mm, as-machined (no surface treatment), tolerance IT7. Please advise lead time."
+    },
+    {
+      "id": "S3",
+      "desc": "304 + anodizing -> BLOCKED",
+      "expect_state": "ARCHIVED",
+      "expect_status": "BLOCKED",
+      "customer": {"customer_id": "CUST-0003", "name": "Pacific Hardware", "contact_name": "Cathy", "country": "SG"},
+      "email": "Dear team, kindly quote 20 pcs of 304 stainless steel plates, 100x50x10mm, anodizing, tolerance IT7."
+    },
+    {
+      "id": "S4",
+      "desc": "304 + passivation -> DONE",
+      "expect_state": "DONE",
+      "expect_status": "PASS",
+      "customer": {"customer_id": "CUST-0003", "name": "Pacific Hardware", "contact_name": "Cathy", "country": "SG"},
+      "email": "Dear team, kindly quote 20 pcs of 304 stainless steel plates, 100x50x10mm, passivation, tolerance IT7."
+    },
+    {
+      "id": "S5",
+      "desc": "TC4 + IT5 -> HITL",
+      "expect_state": "HITL",
+      "expect_status": "HITL",
+      "customer": {"customer_id": "CUST-0004", "name": "Precision Med Ltd", "contact_name": "David", "country": "UK"},
+      "email": "We require 10 pcs TC4 titanium surgical fixtures, 60x30x12mm, as-machined, precision tolerance IT5. Please confirm capability."
+    },
+    {
+      "id": "M1",
+      "desc": "Email +/-0.02 + Voice 0.05 -> HITL / VOICE_EMAIL_CONFLICT",
+      "expect_state": "HITL",
+      "expect_status": "HITL",
+      "expect_conflict": "VOICE_EMAIL_CONFLICT",
+      "customer": {"customer_id": "CUST-0005", "name": "Delta Motion", "contact_name": "Eva", "country": "US"},
+      "email": "Please quote 50 pcs 6061 aluminum housings, 100x50x10mm, anodizing. General tolerance IT7, but the critical bore must hold +/-0.02mm.",
+      "voice_transcript": "关于那个关键孔径尺寸，其实可以放宽到 ±0.05 毫米，不用做到那么严。"
+    }
+  ]
+}

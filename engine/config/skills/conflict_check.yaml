@@ -1,0 +1,12 @@
+name: conflict_check
+category: safety
+description: 材料×表面处理×公差×热处理 DFM 工艺禁忌冲突检测
+timeout: 30
+executor: src.neuro_core.conflict_check
+schema:
+  type: object
+  required: [quote]
+  properties:
+    quote:
+      type: object
+      description: 待检查的报价单

@@ -1,0 +1,12 @@
+name: cnc-risk-guardian_basic
+description: cnc-risk-guardian基本工作流
+
+steps:
+  - name: execute
+    skill: cnc-risk-guardian
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

@@ -1,0 +1,68 @@
+# rfq_extraction.yaml — RFQ 结构化抽取提示 (LLM 提议, 引擎/护栏裁决)
+# 用途: 维度2.1 结构化提示模板 + few-shot + JSON-Schema 绑定函数调用
+# 铁律: LLM 只抽取字段, 不生成价格/不做工艺裁决; 输出必须严格 JSON, 由 schema 校验。
+
+name: rfq-extraction
+version: 1
+task: 从外贸询盘文本抽取 canonical RFQ 结构化字段
+
+system: |
+  你是制造业外贸 RFQ 结构化抽取器。只输出一个 JSON 对象, 不要解释, 不要 markdown 代码块。
+  规则:
+  1. 只抽取文本中明确出现或可安全归一的字段; 不确定就置 null, 绝不臆测。
+  2. material 归一到: 6061/7075/304/316L/TC4/45钢/Q235/黄铜 (识别别名如 al6061→6061, sus304→304, 钛合金→TC4)。
+  3. surface 归一到: 阳极氧化/钝化/发黑/镀锌/镀铬/镀镍/磷化/喷漆/喷砂/无 (anodizing→阳极氧化, passivation→钝化)。
+  4. tolerance_grade 取 IT4..IT10; 若只给 ±mm 则同时填 tolerance_mm, grade 可为 null。
+  5. quantity 为整数; dimensions_mm 为 [长,宽,高] 毫米数组。
+  6. missing_information 列出缺失的关键字段名 (material/quantity/surface_finish/tolerance)。
+  7. process 固定输出 "CNC" (除非文本明确指明其它工艺)。
+
+output_schema:
+  type: object
+  properties:
+    material: {type: ["string", "null"]}
+    surface: {type: ["string", "null"]}
+    quantity: {type: ["integer", "null"]}
+    dimensions_mm: {type: ["array", "null"], items: {type: number}}
+    tolerance_grade: {type: ["string", "null"]}
+    tolerance_mm: {type: ["number", "null"]}
+    process: {type: string, default: CNC}
+    missing_information: {type: array, items: {type: string}}
+  required: [material, quantity]
+
+user_template: |
+  询盘文本:
+  """{email_text}"""
+  按要求只输出 JSON。
+
+few_shot:
+  - input: "Please quote 50 pcs of 6061 aluminum brackets, 100x50x10mm, anodizing, tolerance IT7."
+    output:
+      material: "6061"
+      surface: "阳极氧化"
+      quantity: 50
+      dimensions_mm: [100, 50, 10]
+      tolerance_grade: "IT7"
+      tolerance_mm: null
+      process: "CNC"
+      missing_information: []
+  - input: "需要 20 个 304 不锈钢板, 钝化处理, 公差 IT7, 尺寸 100x50x10mm"
+    output:
+      material: "304"
+      surface: "钝化"
+      quantity: 20
+      dimensions_mm: [100, 50, 10]
+      tolerance_grade: "IT7"
+      tolerance_mm: null
+      process: "CNC"
+      missing_information: []
+  - input: "Quote 10 pcs TC4 titanium fixtures, critical bore must hold ±0.02mm."
+    output:
+      material: "TC4"
+      surface: null
+      quantity: 10
+      dimensions_mm: null
+      tolerance_grade: null
+      tolerance_mm: 0.02
+      process: "CNC"
+      missing_information: ["surface_finish", "tolerance"]

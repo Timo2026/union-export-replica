@@ -1,0 +1,12 @@
+name: cast-iron-material-knowledge_basic
+description: cast-iron-material-knowledge基本工作流
+
+steps:
+  - name: execute
+    skill: cast-iron-material-knowledge
+    capability: check
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

@@ -1,0 +1,178 @@
+version: 3
+updated_at: '2026-09-28 09:52:34'
+dispatcher:
+  strategy: auto
+  llm_role: llm
+  fallback_rules: true
+  max_skills_per_task: 8
+  audit_max: 50
+skills:
+  parse_rfq:
+    enabled: true
+    label: 解析询盘 / RFQ
+    description: 邮件/文本 → canonical RFQ 结构化字段
+    iron_rule: deterministic
+    openshell:
+    - iron-rule-1
+    - local-only
+    - skill-allowlist
+  extract_specs:
+    enabled: true
+    label: LLM 补参 (可空)
+    description: LLM 提议补全缺失字段, 不覆盖确定性值
+    iron_rule: llm_proposal
+    openshell:
+    - skill-allowlist
+  check_dfm:
+    enabled: true
+    label: DFM 冲突检测
+    description: Timo ConflictChecker, 硬冲突 BLOCKED
+    iron_rule: deterministic
+    openshell:
+    - iron-rule-1
+    - skill-allowlist
+  calc_quote:
+    enabled: true
+    label: 确定性报价
+    description: Timo calc_quote, 价格唯一权威
+    iron_rule: deterministic
+    openshell:
+    - iron-rule-1
+    - hitl-required
+    - skill-allowlist
+  verify_gate:
+    enabled: true
+    label: 辟牟援推止验收
+    description: policy 裁决 PASS/HITL/BLOCKED
+    iron_rule: deterministic
+    openshell:
+    - iron-rule-1
+    - hitl-required
+    - skill-allowlist
+  write_reply:
+    enabled: true
+    label: 英文回复草稿
+    description: 模板/LLM 起草, draft_only 不定数字
+    iron_rule: draft_only
+    openshell:
+    - skill-allowlist
+  submit_feedback:
+    enabled: true
+    label: 提交反馈
+    description: 写入 feedback_store (v2.4.0)
+    iron_rule: deterministic
+    openshell:
+    - local-only
+    - skill-allowlist
+  render_thumbnail:
+    enabled: true
+    label: STEP 缩略图
+    description: OCP B-rep → SVG 等角投影
+    iron_rule: deterministic
+    openshell:
+    - local-only
+    - skill-allowlist
+  supplier_match:
+    enabled: true
+    label: 供应商匹配
+    description: 7 维打分 TopN (客户确认后履约)
+    iron_rule: deterministic
+    openshell:
+    - skill-allowlist
+  golden_chain:
+    enabled: true
+    label: 黄金链 Blueprint
+    description: CAT 端到端 S1-S5+M1
+    iron_rule: deterministic
+    openshell:
+    - iron-rule-1
+    - hitl-required
+    - local-only
+    - skill-allowlist
+  unionskill-quote-bridge:
+    enabled: true
+    label: UnionSkill 报价对照
+    description: pack 提案价, 不覆盖 Timo
+    iron_rule: llm_proposal
+    openshell:
+    - skill-allowlist
+    - hitl-required
+  reference-quote-bridge:
+    enabled: true
+    label: 参考报价提案
+    description: pack 参考价提案
+    iron_rule: llm_proposal
+    openshell:
+    - skill-allowlist
+  ceo-decision-cb-bridge:
+    enabled: true
+    label: CEO 决策增强
+    description: 决策解释, 不改状态机
+    iron_rule: llm_proposal
+    openshell:
+    - skill-allowlist
+  reid-os-bridge:
+    enabled: true
+    label: Reid OS 增强
+    description: 协议分诊增强
+    iron_rule: llm_proposal
+    openshell:
+    - skill-allowlist
+  knowledge-index-lookup:
+    enabled: true
+    label: 知识目录检索
+    description: catalog lookup only
+    iron_rule: deterministic
+    openshell:
+    - local-only
+    - skill-allowlist
+  feasibility_checker:
+    enabled: true
+    label: 设备能力校验
+    description: 尺寸/重量/材料/公差四维核对设备能力表, 确定性不定价
+    iron_rule: deterministic
+    openshell:
+    - iron-rule-1
+    - local-only
+    - skill-allowlist
+  rag_ingest:
+    enabled: true
+    label: 文档入库 / 报价索引重建
+    description: 文件→L4 文档层 + L2 报价向量重建, 委托 rag_layers (本地库)
+    iron_rule: deterministic
+    openshell:
+    - local-only
+    - skill-allowlist
+  batch_quote:
+    enabled: true
+    label: BOM 批量报价
+    description: BOM 逐行黄金链批量报价 (STEP 几何定价), 复用 scripts.batch_quote, 串行+HITL
+    iron_rule: deterministic
+    openshell:
+    - iron-rule-1
+    - local-only
+    - skill-allowlist
+  quote_correction:
+    enabled: true
+    label: L2 锚点矫正提案
+    description: 引擎价→历史锚点矫正提案 (±5/10/15% 分级封顶+sha 审计链), proposal-only
+    iron_rule: deterministic
+    openshell:
+    - iron-rule-1
+    - local-only
+    - skill-allowlist
+openshell:
+  iron-rule-1:
+    enabled: true
+    locked: true
+  hitl-required:
+    enabled: true
+    locked: false
+  local-only:
+    enabled: true
+    locked: false
+  skill-allowlist:
+    enabled: true
+    locked: false
+model_router:
+  source: models_yaml

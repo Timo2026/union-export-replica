@@ -1,0 +1,94 @@
+version: 1
+updated_at: "2026-09-19"
+policy:
+  allowlist_source: skill_registry
+  catalog_never_executable: true
+  pack_default_iron_rule: llm_proposal
+  max_pack_skills_enabled: 12
+  overlay_default: off          # 客户校准仅证据提示, 不自动改价
+  followup_draft_only: true
+
+# 内核 skill 与 config/skills.yaml / guardrails.TOOL_ALLOWLIST 对齐
+core:
+  - {id: parse_rfq, status: core, iron_rule: deterministic}
+  - {id: extract_specs, status: core, iron_rule: llm_proposal}
+  - {id: check_dfm, status: core, iron_rule: deterministic}
+  - {id: calc_quote, status: core, iron_rule: deterministic}
+  - {id: verify_gate, status: core, iron_rule: deterministic}
+  - {id: write_reply, status: core, iron_rule: draft_only}
+  - {id: submit_feedback, status: core, iron_rule: deterministic}
+  - {id: render_thumbnail, status: core, iron_rule: deterministic}
+  - {id: supplier_match, status: core, iron_rule: deterministic}
+  - {id: golden_chain, status: core, iron_rule: deterministic}
+  - {id: fleet-coordinator, status: core, iron_rule: deterministic}
+  - {id: material-expert, status: core, iron_rule: llm_proposal}
+  - {id: price-expert, status: core, iron_rule: llm_proposal}
+  - {id: dfm-expert, status: core, iron_rule: llm_proposal}
+  - {id: quality-loop, status: core, iron_rule: llm_proposal}
+  - {id: orchestrator, status: core, iron_rule: llm_proposal}
+  - {id: ceo-decision, status: core, iron_rule: llm_proposal}
+  - {id: reid-os, status: core, iron_rule: llm_proposal}
+  - {id: rfq-extraction, status: core, iron_rule: deterministic}
+  - {id: dfm-conflict, status: core, iron_rule: deterministic}
+  - {id: cnc-quote, status: core, iron_rule: deterministic}
+  - {id: step-analysis, status: core, iron_rule: deterministic}
+  - {id: reply-draft, status: core, iron_rule: draft_only}
+  - {id: verification, status: core, iron_rule: deterministic}
+  - {id: freight-customs, status: core, iron_rule: deterministic}
+
+packs:
+  quote-pack:
+    enabled: true
+    skills:
+      - id: unionskill-quote-bridge
+        status: pack_enabled
+        iron_rule: llm_proposal
+        source: "C:/Users/<user>/Videos/skill/2026822/skills_extracted/skills/unionskill-quote"
+        backend: adapters.skill_pack_adapter:run
+        openshell: [skill-allowlist, hitl-required]
+        notes: "对照/解释价；终价仍 calc_quote"
+      - id: reference-quote-bridge
+        status: pack_enabled
+        iron_rule: llm_proposal
+        source: "C:/Users/<user>/Videos/skill/2026822/skills_extracted/skills/reference-quote"
+        backend: adapters.skill_pack_adapter:run
+        openshell: [skill-allowlist]
+        notes: "参考价提案"
+  decision-pack:
+    enabled: true
+    skills:
+      - id: ceo-decision-cb-bridge
+        status: pack_enabled
+        iron_rule: llm_proposal
+        source: "C:/Users/<user>/Videos/skill/2026822/skills_extracted/skills/ceo-decision-cb"
+        backend: adapters.skill_pack_adapter:run
+        openshell: [skill-allowlist]
+        notes: "决策解释增强；不改状态机与终价"
+      - id: reid-os-bridge
+        status: pack_enabled
+        iron_rule: llm_proposal
+        source: "C:/Users/<user>/Videos/skill/2026822/skills_extracted/skills/reid-operating-system"
+        backend: adapters.skill_pack_adapter:run
+        openshell: [skill-allowlist]
+  knowledge-router:
+    enabled: true
+    skills:
+      - id: knowledge-index-lookup
+        status: pack_enabled
+        iron_rule: deterministic
+        backend: adapters.skill_pack_adapter:run_lookup
+        openshell: [local-only, skill-allowlist]
+        notes: "目录检索 only; 不改报价数字"
+
+catalog:
+  root_candidates:
+    - "C:/Users/<user>/Videos/skill/skill"
+    - "C:/Users/<user>/Videos/skill/2026822/skills_extracted/skills"
+  index_path: skill_catalog/index.json
+
+quarantine:
+  always_quarantine: true
+  name_patterns:
+    - "^material-\\$"
+    - "^(apple|github|1password|travel|spotify|notion|obsidian)"
+    - "^suntime-"

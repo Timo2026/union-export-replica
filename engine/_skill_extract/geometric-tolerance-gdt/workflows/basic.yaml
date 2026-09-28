@@ -1,0 +1,12 @@
+name: geometric-tolerance-gdt_basic
+description: geometric-tolerance-gdt基本工作流
+
+steps:
+  - name: execute
+    skill: geometric-tolerance-gdt
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

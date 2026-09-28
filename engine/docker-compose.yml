@@ -1,0 +1,75 @@
+# ============================================================
+# Union CNC AI Brain — Docker Compose 部署（基础配置）
+#
+# 本文件是「各厂商公共」的 service 定义，厂商差异通过
+# BUILD ARG（BASE_IMAGE）与 override 文件按需叠加，DRY 复用：
+#
+#   # 纯 CPU（默认，无 GPU）
+#   docker compose -f docker-compose.yml -f docker-compose.cpu.yml up -d --build
+#
+#   # AMD ROCm（比赛赛道重点）
+#   docker compose -f docker-compose.yml -f docker-compose.rocm.yml up -d --build
+#
+#   # NVIDIA CUDA
+#   docker compose -f docker-compose.yml -f docker-compose.cuda.yml up -d --build
+#
+#   # 摩尔线程 MUSA：主后端为本机 vLLM MUSA（:32102 / :8000），
+#   #   主服务仍用 CPU/通用镜像，通过 host.docker.internal 连接本机 vLLM。
+#   #   详见 MUSA_vLLM_启动.bat / scripts/start_musa_vllm.sh 与 docs/DEPLOY.md
+#
+# 环境变量一律从项目根目录 .env 注入（cp .env.example .env），严禁硬编码密钥。
+# ============================================================
+
+version: "3.8"
+
+services:
+  cnc-ai-brain:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # 厂商基础镜像（可被 override 文件或 .env 的 BASE_IMAGE 覆盖）
+        BASE_IMAGE: ${BASE_IMAGE:-python:3.11-slim}
+        # 是否安装完整 STEP 解析依赖（OCP/cadquery/cascadion）
+        INSTALL_STEP: ${INSTALL_STEP:-1}
+    container_name: cnc-ai-brain
+    ports:
+      - "7862:7862"        # 主服务 (FastAPI)
+      - "7863:7863"        # MTClaw Function Router (可选)
+    environment:
+      - SHADOW_MODE=${SHADOW_MODE:-1}
+      - PYTHONUTF8=1
+      - PYTHONIOENCODING=utf-8
+      # 宿主机本地推理端点（Ollama / MUSA vLLM :32102 / :8000 / VLM :1234）
+      # 容器内通过 host.docker.internal 访问宿主机 localhost
+      - OLLAMA_BASE=${OLLAMA_BASE:-http://host.docker.internal:11434}
+      - VLM_DEFAULT_URL=${VLM_DEFAULT_URL:-http://host.docker.internal:1234/v1}
+      # 云端 API Key（从 .env 读取，禁止硬编码）
+      - STEPFUN_API_KEY=${STEPFUN_API_KEY:-}
+      - OPC_API_KEY=${OPC_API_KEY:-}
+    extra_hosts:
+      # Linux 下允许容器访问宿主机 localhost（MUSA vLLM / Ollama / VLM 均在本机）
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data:/app/data              # 持久化: STEP/STL/上传/导出/数据库
+      - ./config:/app/config          # 配置文件
+      - ./logs:/app/logs              # 日志
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7862/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 可选: MTClaw Function Router (CNC 垂类工具加速)
+  # function-router:
+  #   image: mtclaw/fr:latest
+  #   container_name: mtclaw-fr
+  #   ports:
+  #     - "7863:7863"
+  #   volumes:
+  #     - ./.function-router:/config
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - cnc-ai-brain

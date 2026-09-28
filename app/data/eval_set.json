@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {"id": "S1", "email": "Please quote 50 pcs of 6061 aluminum brackets, 100x50x10mm, anodizing, tolerance IT7.",
+     "expect_state": "DONE", "expect_status": "PASS",
+     "expected_rfq": {"material": "6061", "surface": "阳极氧化", "quantity": 50, "tolerance_grade": "IT7"}},
+    {"id": "S2", "email": "We need 10 pcs TC4 titanium spacers, 80x40x15mm, as-machined, tolerance IT7.",
+     "expect_state": "DONE", "expect_status": "PASS",
+     "expected_rfq": {"material": "TC4", "surface": "无", "quantity": 10, "tolerance_grade": "IT7"}},
+    {"id": "S3", "email": "quote 20 pcs 304 stainless plates, 100x50x10mm, anodizing, IT7.",
+     "expect_state": "ARCHIVED", "expect_status": "BLOCKED",
+     "expected_rfq": {"material": "304", "surface": "阳极氧化", "quantity": 20, "tolerance_grade": "IT7"}},
+    {"id": "S4", "email": "quote 20 pcs 304 stainless plates, 100x50x10mm, passivation, IT7.",
+     "expect_state": "DONE", "expect_status": "PASS",
+     "expected_rfq": {"material": "304", "surface": "钝化", "quantity": 20, "tolerance_grade": "IT7"}},
+    {"id": "S5", "email": "10 pcs TC4 titanium fixtures, 60x30x12mm, as-machined, precision tolerance IT5.",
+     "expect_state": "HITL", "expect_status": "HITL",
+     "expected_rfq": {"material": "TC4", "surface": "无", "quantity": 10, "tolerance_grade": "IT5"}},
+    {"id": "M1", "email": "50 pcs 6061 aluminum housings, 100x50x10mm, anodizing. General tolerance IT7, critical bore +/-0.02mm.",
+     "voice_transcript": "关于那个关键孔径尺寸，其实可以放宽到 ±0.05 毫米。",
+     "expect_state": "HITL", "expect_status": "HITL",
+     "expected_rfq": {"material": "6061", "surface": "阳极氧化", "quantity": 50, "tolerance_grade": "IT7"}}
+  ],
+  "rag_golden": [
+    {"query": "304 阳极氧化", "expected_case": "KB-304-ANOD",
+     "answer": "304/316L 不锈钢自然钝化, 不做阳极氧化, 推荐钝化或电解抛光。",
+     "context": ["304/316L 不锈钢自然钝化, 不做阳极氧化; 推荐钝化或电解抛光。"]},
+    {"query": "TC4 IT5 精密公差", "expected_case": "KB-TC4-IT5",
+     "answer": "钛合金 IT4/IT5 超常规 CNC 经济公差, 需精密磨削或慢走丝, 强制人工复核。",
+     "context": ["钛合金 IT4/IT5 超常规 CNC 经济公差, 需精密磨削/慢走丝, 强制人工复核。"]},
+    {"query": "铝合金 镀锌", "expected_case": "KB-AL-ZINC",
+     "answer": "6061/7075 铝合金不适合镀锌, 推荐阳极氧化或镀镍。",
+     "context": ["6061/7075 铝合金不适合镀锌, 推荐阳极氧化或镀镍。"]}
+  ]
+}

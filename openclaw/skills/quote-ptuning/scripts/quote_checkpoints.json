@@ -1,0 +1,83 @@
+{
+  "version": "1.1",
+  "date": "2026-05-31",
+  "method": "报价引擎部署验证 — 基于当前引擎实际输出快照",
+  "note": "这些值是当前引擎的回归测试基准。偏差检测说明引擎行为发生变化，需人工判断是修复还是退化。",
+  "checkpoints": [
+    {
+      "id": "shaping_ring_6061",
+      "desc": "ShapingRing(6061, 阳极氧化, ×3件)",
+      "inputs": {
+        "part_name": "ShapingRing",
+        "material": "6061铝合金",
+        "surface": "阳极氧化",
+        "quantity": 3
+      },
+      "expected": {
+        "total": 515.62,
+        "source": "quote-ptuning v2026-05-31实际输出"
+      },
+      "tolerance": 0.10
+    },
+    {
+      "id": "shaft_c_45steel",
+      "desc": "轴C(45钢, 发黑, ×1件)",
+      "inputs": {
+        "part_name": "轴C",
+        "material": "45钢",
+        "surface": "发黑",
+        "quantity": 1
+      },
+      "expected": {
+        "total": 120.31,
+        "source": "quote-ptuning v2026-05-31实际输出"
+      },
+      "tolerance": 0.10
+    },
+    {
+      "id": "punch_dc53",
+      "desc": "下冲(DC53, 无处理, ×1件)",
+      "inputs": {
+        "part_name": "下冲",
+        "material": "DC53模具钢",
+        "surface": "无",
+        "quantity": 1
+      },
+      "expected": {
+        "total": 343.75,
+        "source": "quote-ptuning v2026-05-31实际输出"
+      },
+      "tolerance": 0.10
+    },
+    {
+      "id": "flange_6061_standard",
+      "desc": "法兰(6061, 阳极氧化, ×1件)",
+      "inputs": {
+        "part_name": "法兰",
+        "material": "6061铝合金",
+        "surface": "阳极氧化",
+        "quantity": 1
+      },
+      "expected": {
+        "total": 171.88,
+        "source": "quote-ptuning v2026-05-31实际输出"
+      },
+      "tolerance": 0.10
+    },
+    {
+      "id": "rough_dc53_punch",
+      "desc": "开粗(260×200×55mm, DC53, 无)",
+      "inputs": {
+        "material": "DC53模具钢",
+        "length": 260, "width": 200, "height": 55,
+        "quantity": 1,
+        "engine": "rough_machining"
+      },
+      "expected": {
+        "total": 4241.86,
+        "source": "rough-machining-quote v2026-05-31实际输出"
+      },
+      "tolerance": 0.10
+    }
+  ]
+}

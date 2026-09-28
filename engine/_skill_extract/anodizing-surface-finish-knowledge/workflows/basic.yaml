@@ -1,0 +1,12 @@
+name: anodizing-surface-finish-knowledge_basic
+description: anodizing-surface-finish-knowledge基本工作流
+
+steps:
+  - name: execute
+    skill: anodizing-surface-finish-knowledge
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

@@ -1,0 +1,89 @@
+# Union Manufacturing Export Agent — runtime settings
+# 方案代号: UEA-NCPAAI-v2.0 (consolidated trunk)
+# 原则: 所有端点/路径从配置读取, 禁止硬编码 (继承 cnc-ai-brain CONTRIBUTING 规范)
+
+profile: demo            # demo | dgx-spark-p0 | nemo-production
+context_id_prefix: RFQ
+
+# ---- 制造决策内核 (Timo2026 / cnc-ai-brain v12.0.0-fusion) ----
+timo:
+  # 在线优先: 命中真实 FastAPI 服务
+  base_url: "http://127.0.0.1:7862"
+  timeout_s: 25
+  health_timeout_s: 4
+  # 离线兜底: 直接 import 真实引擎源码 (byte-identical, 非示意系数)
+  # 指向已解压的 cnc-ai-brain 工程根 (含 app/ src/ .venv/)
+  engine_src: "C:/Users/<user>/Desktop/比赛/英伟达第三/_timo_engine/Timo_CNC-AI-Brain-v12.0-Fusion - 副本"
+  engine_python: "C:/Users/<user>/Desktop/比赛/英伟达第三/_timo_engine/Timo_CNC-AI-Brain-v12.0-Fusion - 副本/.venv/Scripts/python.exe"
+  allow_fallback: true
+
+# ---- 多模态 Intake + RAG 记忆层 (funasr-gui) ----
+funasr:
+  base_url: "http://127.0.0.1:8866"     # FastAPI: /health /transcribe /rag/search /rag/ask
+  asr_url: "http://127.0.0.1:8089"      # Qwen3-ASR-0.6B
+  vlm_url: "http://127.0.0.1:1234"      # qwen3.8-27b (OpenAI 兼容)
+  embed_url: "http://127.0.0.1:1278"    # embedding
+  timeout_s: 30
+  # 未启动时: 显式 MOCK 标注, 绝不冒充生产结果
+  allow_mock: true
+
+# ---- B 分层 RAG 网关 (services/rag_layers.py, 任务 #26) ----
+# 四层: customer(SQL) / quotes(向量锚点) / conversations(funasr) / craft(rag.py)
+# embed_url 缺省派生自上方 funasr.embed_url + /v1 (单一来源); 显式配置可覆盖。
+# :1278 不可达 → HashEmbedder 确定性降级 (显式 MOCK:hash-embedder, 不冒充在线)。
+rag_layers:
+  enabled: true
+  embed_url: "http://127.0.0.1:1278/v1"
+  vector_backend: file          # memory | qdrant | file (JSON 落盘, 重启持久)
+  timeout_s: 3
+  degrade_cooldown_s: 60        # 在线失败后冷却 N 秒不再探测 (直接哈希降级, 避免每次 embed 白等连接超时)
+
+# ---- Model Router (L3 Model Mesh) ----
+model_router:
+  backend: local          # local(funasr/ollama) | nvidia(NIM) | mock
+  roles:
+    FAST:   { endpoint: "http://127.0.0.1:1234/v1", model: "qwen3.8-27b" }
+    VISION: { endpoint: "http://127.0.0.1:1234/v1", model: "qwen3.8-27b" }
+    REASON: { endpoint: "http://127.0.0.1:1234/v1", model: "qwen3.8-27b" }
+    EMBED:  { endpoint: "http://127.0.0.1:1278/v1", model: "bge-m3" }
+    ASR:    { endpoint: "http://127.0.0.1:8089",    model: "Qwen3-ASR-0.6B" }
+    # DETERMINISTIC 角色永远走 Timo 引擎, 不走 LLM
+
+# ---- 存储 (Profile A: 本地) ----
+storage:
+  contexts_dir: "data/contexts"
+  audit_db: "data/audit.sqlite3"
+  crm_db: "data/crm.sqlite3"
+  artifacts_dir: "data/artifacts"
+  traces_dir: "data/traces"
+
+# ---- P2 Guardrails (services/guardrails.py) ----
+guardrails:
+  # v6.0.0: 默认 builtin (零依赖, 三段护栏 input/tool/output 全跑)
+  # 切 nemo_soft 需 UEA_USE_NEMO_GUARDRAILS=1 且 pip install nemoguardrails
+  backend: builtin          # builtin | nemo_soft (检测 nemoguardrails 包, 无则降级 builtin)
+  input_block: [prompt_injection, data_exfiltration, dangerous_content, credential_leak]
+  tool_allowlist_enforced: true
+  output_external_send: draft_only
+
+# ---- D-P0.1 集中式发信主闸 (services/egress_gate.py) ----
+# 铁律① data-stays-local 的集中强制层: 任何真实出站外发 (smtp/webhook) 必须过此闸。
+# 默认 DENY (fail-safe)。放行需 allow=true 且对应 channel=true, 或 env UEA_EGRESS_ALLOW="smtp,webhook"|"all"。
+# 注: Gmail IMAP 入站连接由其自有 settings.enabled (gmail_settings.json) 门禁, 不在此闸。
+egress:
+  allow: false
+  channels:
+    smtp: false
+    webhook: false
+    imap: false
+
+# ---- 报价口径 (E1-d: 目标毛利单源, 禁止散落硬编码) ----
+pricing:
+  target_margin_pct: 25.0     # 基础目标毛利; 健康分/赢单率在其上微调后夹 12–40
+
+# ---- P2 Observability (services/observability.py) ----
+observability:
+  tracing: otel-json        # 每 context 一条 trace, span 落 JSONL
+  otlp_endpoint: null       # 设为 http://collector:4318/v1/traces 则同时上报 (失败显式降级)
+  metrics: [tool_calls, tool_errors, hitl_triggers, retrievals, model_calls]
+

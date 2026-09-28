@@ -1,0 +1,3239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Union Export Agent · 控制台</title>
+<style>
+  :root{--bg:#0b1020;--card:#151b2e;--card2:#1c2440;--line:#2a3352;--tx:#e6ebff;--mut:#8b96b8;
+        --ok:#22c55e;--off:#64748b;--warn:#f59e0b;--err:#ef4444;--acc:#76B900;--acc2:#22d3ee}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(160deg,#0b1020,#0e1428);color:var(--tx);
+       font:14px/1.5 -apple-system,"Segoe UI",Roboto,"Microsoft YaHei",sans-serif}
+  header{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.3px}
+  header .sub{color:var(--mut);font-size:12px}
+  .pill{padding:3px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);background:var(--card)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  .dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)} .dot.off{background:var(--off)}
+  nav{display:flex;gap:8px;padding:12px 24px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  nav button{background:var(--card);color:var(--tx);border:1px solid var(--line);padding:8px 16px;
+             border-radius:8px;cursor:pointer;font-size:13px}
+  nav button.active{background:var(--acc);border-color:var(--acc);color:#fff}
+  main{padding:20px 24px;max-width:1200px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .card h3{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px}
+  .role{font-size:11px;color:var(--acc2);border:1px solid var(--line);padding:1px 7px;border-radius:6px}
+  .note{color:var(--mut);font-size:12px;margin:2px 0 12px}
+  label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
+  input[type=text]{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);
+                   padding:8px 10px;border-radius:7px;font-size:13px;font-family:ui-monospace,Consolas,monospace}
+  input[type=text]:focus{outline:none;border-color:var(--acc)}
+  .row{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .badge{font-size:12px;padding:3px 9px;border-radius:7px;border:1px solid var(--line)}
+  .badge.on{color:var(--ok);border-color:#173a26;background:#0f2417}
+  .badge.off{color:var(--off)} .badge.err{color:var(--err);border-color:#3a1717;background:#240f0f}
+  .lat{color:var(--mut);font-size:11px}
+  button.mini{background:var(--card2);border:1px solid var(--line);color:var(--tx);padding:6px 12px;
+              border-radius:7px;cursor:pointer;font-size:12px}
+  button.mini:hover{border-color:var(--acc)}
+  .switch{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  button.primary{background:var(--acc);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600}
+  button.primary:hover{filter:brightness(1.1)}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--tx);padding:9px 16px;border-radius:8px;cursor:pointer;font-size:13px}
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card2);
+         border:1px solid var(--acc);padding:10px 20px;border-radius:9px;opacity:0;transition:.3s;pointer-events:none;z-index:99}
+  #toast.show{opacity:1}
+  textarea{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);padding:10px;
+           border-radius:8px;font-size:13px;min-height:90px;font-family:inherit}
+  pre{background:#0a0e1c;border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;
+      font-size:12px;color:#c7d2fe;max-height:420px}
+  .hidden{display:none} .lock{color:var(--warn);font-size:12px}
+  .flex{display:flex;gap:12px;flex-wrap:wrap} .flex>*{flex:1;min-width:200px}
+  a{color:var(--acc2)}
+  /* v2.4.0 SVG icons + 反馈按钮 + 拖拽区 */
+  .icon-18{width:18px;height:18px;vertical-align:-3px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .icon-22{width:22px;height:22px;vertical-align:-5px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .fb-btn{position:relative;display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 14px;
+          background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;
+          cursor:pointer;font-size:13px;font-weight:500}
+  .fb-btn:hover{border-color:var(--acc)}
+  .fb-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  .badge-unread{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+                background:var(--err);color:#fff;font-size:11px;line-height:18px;text-align:center;
+                box-shadow:0 0 0 2px var(--bg);font-weight:600}
+  .badge-unread[hidden]{display:none}
+  nav button{display:inline-flex;align-items:center;gap:6px}
+  .drag-zone{border:2px dashed var(--line);border-radius:12px;padding:48px 24px;text-align:center;
+             color:var(--mut);background:var(--card);transition:.2s;cursor:pointer}
+  .drag-zone:hover,.drag-zone.drag{border-color:var(--acc);background:rgba(99,102,241,0.08);color:var(--tx)}
+  .thumb-frame{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:14px}
+  .thumb-frame svg{display:block;margin:0 auto;max-width:100%}
+  .meta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:12px}
+  .meta-cell{background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px}
+  .meta-cell b{display:block;color:var(--acc2);font-size:11px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+  .fb-item{background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:8px;font-size:12px}
+  .fb-item b{color:var(--acc2);margin-right:6px}
+  .fb-item .meta-line{color:var(--mut);font-size:11px;margin-top:4px}
+  /* honeypot */
+  .honeypot{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+  /* ===== v3.0 #36 邮件台 (Gmail 主入口, 7 区聚合) ===== */
+  .mailbox-shell{display:grid;grid-template-columns:300px 1fr 360px;gap:14px;min-height:560px}
+  .mail-list{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;max-height:760px;overflow:auto}
+  .mail-list .toolbar{margin-bottom:10px}
+  .mail-item{padding:9px 11px;border-radius:9px;cursor:pointer;border:1px solid transparent;margin-bottom:5px;transition:.15s}
+  .mail-item:hover{background:var(--card2);border-color:var(--line)}
+  .mail-item.active{background:var(--card2);border-color:var(--acc)}
+  .mail-item .from{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mail-item .subject{font-size:12px;color:var(--tx);margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mail-item .meta-line{font-size:11px;color:var(--mut);display:flex;gap:6px;align-items:center}
+  .mail-item .badge-list{display:inline-flex;gap:4px}
+  .mail-detail{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px}
+  .mail-detail .head{border-bottom:1px solid var(--line);padding-bottom:12px}
+  .mail-detail .head h2{margin:0;font-size:17px}
+  .mail-detail .head .from-line{font-size:12px;color:var(--mut);margin-top:4px}
+  .mail-detail .body-text{white-space:pre-wrap;font-size:13px;line-height:1.65;background:var(--card2);padding:12px;border-radius:9px;max-height:280px;overflow:auto;border:1px solid var(--line)}
+  .mail-detail .att-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .mail-side{display:flex;flex-direction:column;gap:10px;max-height:760px;overflow:auto}
+  .region{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 13px;transition:.2s}
+  .region:hover{border-color:var(--acc2)}
+  .region.crit{border-color:var(--err);background:linear-gradient(180deg,#1a0e14,#151b2e)}
+  .region.warn{border-color:var(--warn)}
+  .region .rh{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;cursor:pointer;user-select:none}
+  .region .rh .ico{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .region .rh .ico.ok{background:var(--ok)} .region .rh .ico.warn{background:var(--warn)}
+  .region .rh .ico.crit{background:var(--err)} .region .rh .ico.info{background:var(--acc)}
+  .region .rh .count{margin-left:auto;font-size:11px;color:var(--mut);background:var(--card2);padding:1px 7px;border-radius:7px}
+  .region .rb{font-size:12px;line-height:1.55;margin-top:8px;color:var(--tx)}
+  .region .rb.collapsed{display:none}
+  .region .rb ul{margin:0;padding-left:18px}
+  .region .rb li{margin-bottom:4px}
+  .region .rb code{background:var(--card2);padding:1px 5px;border-radius:4px;font-size:11px}
+  .region .empty{color:var(--mut);font-style:italic;font-size:12px}
+  .demo-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .demo-bar button{padding:5px 10px;font-size:11px}
+  .demo-bar button.active{background:var(--acc);border-color:var(--acc);color:#fff}
+  .draft-panel{margin-top:8px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .draft-panel textarea{font-family:ui-monospace,Consolas,monospace;font-size:12px;min-height:140px}
+  .draft-panel .draft-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center}
+  .draft-panel .draft-actions .lat{margin-left:auto}
+  .empty-state{text-align:center;padding:48px 16px;color:var(--mut)}
+  .empty-state .big{font-size:42px;margin-bottom:10px;opacity:.5}
+  .empty-state .hint{font-size:13px;margin-top:6px}
+  .locked-banner{background:rgba(239,68,68,.12);border:1px solid var(--err);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--err);margin-bottom:10px;display:none}
+  .locked-banner.show{display:block}
+  @media (max-width:1100px){.mailbox-shell{grid-template-columns:1fr;max-height:none}.mail-side{max-height:none}}
+
+  /* ===== V12 内核仪表板 ===== */
+  .v12-shell{display:flex;flex-direction:column;gap:14px}
+  .v12-statusbar{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px}
+  .v12-led{width:10px;height:10px;border-radius:50%;background:var(--off);box-shadow:0 0 6px rgba(0,0,0,.3);transition:all .25s}
+  .v12-led.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  .v12-ver{font-weight:700;letter-spacing:.4px;color:var(--acc2)}
+  .v12-src{color:var(--mut);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  .v12-spacer{flex:1}
+  .v12-ts{color:var(--mut);font-size:12px;font-variant-numeric:tabular-nums}
+  .v12-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+  .v12-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-height:140px}
+  .v12-card-acc{border-top:2px solid var(--acc)}
+  .v12-card-acc2{border-top:2px solid var(--acc2)}
+  .v12-card-warn{border-top:2px solid var(--warn)}
+  .v12-card-ok{border-top:2px solid var(--ok)}
+  .v12-label{font-size:12px;color:var(--mut);letter-spacing:.5px;text-transform:uppercase}
+  .v12-value{font-size:32px;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums;line-height:1.1}
+  .v12-foot{display:flex;gap:14px;color:var(--mut);font-size:12px}
+  .v12-foot b{color:var(--tx);font-weight:600}
+  .v12-bar{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;margin-top:auto}
+  .v12-bar>div{height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));width:0%;transition:width .6s ease}
+  .v12-buckets{display:flex;flex-wrap:wrap;gap:6px}
+  .v12-bk{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--mut);background:var(--card2)}
+  .v12-bk em{font-style:normal;color:var(--tx);font-weight:600;font-variant-numeric:tabular-nums}
+  .v12-bk.hot{border-color:var(--warn);color:var(--warn)}
+  .v12-bk.hot em{color:var(--warn)}
+  .v12-audit{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;max-height:140px;overflow-y:auto}
+  .v12-audit li{display:flex;justify-content:space-between;gap:6px;padding:3px 6px;background:var(--card2);border-radius:4px}
+  .v12-audit li code{color:var(--acc2)}
+  .v12-audit li span{color:var(--mut)}
+  .v12-traces{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;max-height:140px;overflow-y:auto;font-size:11px}
+  .v12-traces li{display:flex;gap:6px;padding:3px 6px;background:var(--card2);border-radius:4px;align-items:baseline}
+  .v12-traces li b{color:var(--acc2);font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:600;font-size:10px}
+  .v12-traces li.ok{color:var(--mut)}
+  .v12-traces li.err{color:var(--err)}
+  .v12-footbar{display:flex;gap:10px;align-items:center;color:var(--mut);font-size:11px;padding:0 4px}
+  .v12-footbar b,.v12-footbar code{color:var(--tx);font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:500}
+
+  /* ===== HITL 审批面板 ===== */
+  .hitl-panel{background:var(--card2);border:1px solid var(--warn);border-radius:8px;padding:12px;margin-top:10px}
+  .hitl-panel .hitl-head{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--warn);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+  .hitl-panel .hitl-draft{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px;font-size:12px;color:var(--tx);max-height:140px;overflow-y:auto;white-space:pre-wrap;margin-bottom:8px;font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.5}
+  .hitl-panel .hitl-quote{display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:6px 10px;border-radius:6px;font-size:12px;margin-bottom:8px}
+  .hitl-panel .hitl-quote .lock{display:flex;align-items:center;gap:6px}
+  .hitl-panel .hitl-quote .lock-icon{font-size:14px}
+  .hitl-panel .hitl-quote .lock-icon.broken{color:var(--err)}
+  .hitl-panel .hitl-quote .lock-icon.ok{color:var(--ok)}
+  .hitl-panel .hitl-quote code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--acc2);font-size:11px}
+  .hitl-panel .hitl-actions{display:flex;gap:8px;align-items:center}
+  .hitl-panel .hitl-actions .reject-cmt{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--tx);padding:6px 8px;font-size:12px}
+  .hitl-panel .hitl-actions button.approve{background:var(--ok);border:none;color:#001a0a;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px}
+  .hitl-panel .hitl-actions button.approve:disabled{opacity:.4;cursor:not-allowed}
+  .hitl-panel .hitl-actions button.reject{background:transparent;border:1px solid var(--err);color:var(--err);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px}
+  .hitl-panel .hitl-banner{display:none;background:rgba(239,68,68,.18);border:1px solid var(--err);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--err);margin-top:8px;font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.5}
+  .hitl-panel .hitl-banner.show{display:block}
+  /* v3.0-#49 面包屑 + 跨区跳转 */
+  .crumb{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;padding:6px 0;border-top:1px dashed var(--line)}
+  .crumb-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;background:var(--card2);border:1px solid var(--line);font-size:11px;color:var(--mut);font-family:ui-monospace,Menlo,Consolas,monospace}
+  .crumb-pill.ok{color:var(--ok);border-color:#173a26}
+  .crumb-pill.warn{color:var(--warn);border-color:#3a2a0f}
+  .crumb-pill.err{color:var(--err);border-color:#3a1717}
+  .crumb-pill.acc{color:var(--acc2);border-color:#1f3a4a}
+  .crumb-link{cursor:pointer;text-decoration:underline dotted var(--acc)}
+  .crumb-link:hover{color:var(--acc2);text-decoration-style:solid}
+  .region-link{display:inline-block;margin-top:6px;font-size:11px;padding:3px 8px;border-radius:5px;background:var(--card2);border:1px solid var(--line);color:var(--acc);cursor:pointer}
+  .region-link:hover{border-color:var(--acc);background:rgba(99,102,241,0.1)}
+  .region-link.warn{color:var(--warn);border-color:var(--warn)}
+  .hitl-panel .hitl-banner b{color:#fff8a2}
+
+  /* ===== Gmail IMAP 连接条 ===== */
+  .gmail-bar{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:12px;flex-wrap:wrap}
+  .gmail-bar .gmail-state{display:flex;align-items:center;gap:6px;color:var(--mut)}
+  .gmail-bar .gmail-state.on{color:var(--ok)}
+  .gmail-bar .gmail-state.off{color:var(--warn)}
+  .gmail-bar .gmail-state.err{color:var(--err)}
+  .gmail-bar input{background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--tx);padding:5px 8px;font-size:12px}
+  .gmail-bar button{background:transparent;border:1px solid var(--line);color:var(--tx);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px}
+  .gmail-bar button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+  .gmail-bar .gmail-spacer{flex:1}
+
+  /* ===== 上下文面包屑 ===== */
+  .crumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--mut);padding:8px 0;border-bottom:1px solid var(--line);margin-bottom:10px}
+  .crumb span{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:var(--card2);border-radius:999px;cursor:pointer;transition:all .2s}
+  .crumb span:hover{background:var(--line);color:var(--tx)}
+  .crumb span b{font-weight:600;color:var(--tx)}
+  .crumb span.ok b{color:var(--ok)}
+  .crumb span.warn b{color:var(--warn)}
+  .crumb span.err b{color:var(--err)}
+  .crumb .sep{color:var(--line);background:transparent;cursor:default}
+  .crumb .sep:hover{background:transparent}
+
+/* ===== v4 Workbench 三栏 ===== */
+.badge-new{background:var(--acc);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px;font-weight:700;letter-spacing:.5px}
+nav button.active .badge-new{background:#fff;color:var(--acc)}
+.chip-driver{font-size:11px;padding:2px 8px;border-radius:7px;border:1px dashed var(--line);color:var(--muted)}
+.wb-shell{display:grid;grid-template-columns:minmax(280px,26%) minmax(520px,42%) minmax(380px,32%);height:calc(100vh - 56px - 32px - 30px);background:var(--bg);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.wb-col{display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line)}
+.wb-col:last-child{border-right:0}
+.wb-col-hd{padding:10px 14px;border-bottom:1px solid var(--line);background:var(--card);display:flex;align-items:center;gap:8px;min-height:42px}
+.wb-col-hd h3{margin:0;font-size:13px;color:var(--tx);font-weight:600;letter-spacing:.3px}
+.wb-col-hd .sub{color:var(--mut);font-size:11px;margin-left:auto}
+.wb-col-bd{flex:1;overflow:auto;padding:10px 14px}
+.wb-inbox-tools{display:flex;gap:6px;align-items:center;margin-bottom:10px}
+.wb-inbox-tools input[type=search]{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--tx);padding:6px 10px;font-size:12px}
+.wb-inbox-tools select{background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--tx);padding:5px 8px;font-size:11px}
+.wb-mail-item{padding:9px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:var(--card);transition:border-color .15s,background .15s}
+.wb-mail-item:hover{border-color:var(--acc);background:var(--card2)}
+.wb-mail-item.sel{border-color:var(--acc);background:var(--card2);box-shadow:0 0 0 1px var(--acc) inset}
+.wb-mail-item .from{font-size:12px;color:var(--tx);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wb-mail-item .subj{font-size:11px;color:var(--mut);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wb-mail-item .meta{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;align-items:center}
+.wb-mail-item .ts{font-size:10px;color:var(--mut);margin-left:auto}
+.wb-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:0 14px;background:var(--card);flex-shrink:0}
+
+/* v4 Workbench 黄金链 8 步进度条 */
+.wb-golden-chain{display:flex;align-items:center;gap:4px;padding:6px 14px;background:var(--card2);border-bottom:1px solid var(--line);overflow-x:auto;flex-shrink:0}
+.wb-gc-step{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mut);white-space:nowrap;padding:2px 6px;border-radius:4px}
+.wb-gc-step .dot{width:18px;height:18px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:9px;font-family:Consolas,monospace;background:var(--bg)}
+.wb-gc-step.done .dot{border-color:var(--acc);color:var(--acc);background:rgba(118,185,0,.12)}
+.wb-gc-step.active .dot{border-color:var(--warn);color:var(--warn);background:rgba(245,158,11,.12);box-shadow:0 0 6px var(--warn)}
+.wb-gc-step.flag .dot{border-color:var(--err);color:var(--err)}
+.wb-gc-step.locked .dot{border-color:var(--lock);color:var(--lock);background:rgba(180,83,9,.12)}
+.wb-gc-arrow{color:var(--line);font-size:9px}
+
+/* v4 Workbench 3D 几何预览 */
+.wb-3d-preview{border:1px solid var(--line);border-radius:6px;background:radial-gradient(circle at 50% 35%,#101B26,#0B1016 70%);height:180px;position:relative;overflow:hidden;margin-top:10px}
+.wb-3d-preview svg{width:100%;height:100%}
+.wb-3d-label{position:absolute;font-family:Consolas,monospace;font-size:10px;color:var(--acc);text-shadow:0 0 4px var(--acc);z-index:1}
+.wb-3d-preview canvas{display:block}
+
+/* v5.1.0 模型配置侧栏 (Timo v12 风格) */
+.wb-models-panel{position:fixed;right:0;top:50px;bottom:50px;width:380px;background:var(--card);border-left:1px solid var(--acc);box-shadow:-8px 0 24px rgba(0,0,0,.5);z-index:90;transform:translateX(100%);transition:transform .3s ease;display:flex;flex-direction:column}
+.wb-models-panel.open{transform:translateX(0)}
+.wb-models-panel-hd{padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg);display:flex;align-items:center;gap:8px}
+.wb-models-panel-hd h3{margin:0;font-size:13px;color:var(--tx);flex:1}
+.wb-models-panel-bd{flex:1;overflow-y:auto;padding:14px;font-size:12px}
+.wb-models-panel-bd h4{margin:16px 0 8px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+.wb-models-panel-bd h4:first-child{margin-top:0}
+.wb-model-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--line);border-radius:6px;margin-bottom:6px;background:var(--panel2)}
+.wb-model-row .ico{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.wb-model-row .ico.on{background:var(--ok);box-shadow:0 0 4px var(--ok)}
+.wb-model-row .ico.off{background:var(--mut)}
+.wb-model-row .nm{flex:1;font-family:Consolas,monospace;font-size:11px;color:var(--tx)}
+.wb-model-row .ep{font-size:9px;color:var(--mut);font-family:Consolas,monospace}
+.wb-model-row .lat{font-size:10px;color:var(--acc);min-width:40px;text-align:right;font-family:Consolas,monospace}
+
+/* v5.1.0 实时进度条 (dispatcher 调用时显示) */
+.wb-progress-bar{position:fixed;left:0;right:0;top:50px;height:2px;background:var(--line);z-index:99;overflow:hidden;opacity:0;transition:opacity .15s}
+.wb-progress-bar.show{opacity:1}
+.wb-progress-bar::before{content:"";position:absolute;height:100%;width:30%;background:linear-gradient(90deg,transparent,var(--acc),transparent);animation:wbProgress 1.2s linear infinite}
+@keyframes wbProgress{0%{left:-30%}100%{left:100%}}
+.wb-progress-status{position:fixed;left:50%;top:54px;transform:translateX(-50%);background:var(--card);border:1px solid var(--acc);border-radius:0 0 6px 6px;padding:4px 12px;font-size:11px;color:var(--acc);font-family:Consolas,monospace;z-index:99;opacity:0;transition:opacity .15s;pointer-events:none}
+.wb-progress-status.show{opacity:1}
+
+/* v4 Workbench Ctrl+K 命令面板 */
+#wbPalette{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;justify-content:center;align-items:flex-start;padding-top:18vh;z-index:200}
+#wbPalette.show{display:flex}
+#wbPalBox{width:520px;max-width:calc(100vw - 40px);background:var(--card);border:1px solid var(--acc);border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.7);overflow:hidden}
+#wbPalBox input{width:100%;border:none;border-bottom:1px solid var(--line);padding:14px 16px;font-size:14px;background:transparent;color:var(--tx)}
+#wbPalList{max-height:340px;overflow-y:auto;padding:6px}
+.wb-pal-item{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:4px;cursor:pointer;font-size:13px;color:var(--tx)}
+.wb-pal-item:hover,.wb-pal-item.sel{background:rgba(118,185,0,.12);border-left:2px solid var(--acc)}
+.wb-pal-item .pl{flex:1}
+.wb-pal-item .pk{font-family:Consolas,monospace;font-size:10px;color:var(--mut);background:var(--bg);padding:2px 6px;border-radius:3px}
+.wb-tab{padding:9px 14px;cursor:pointer;font-size:12px;color:var(--mut);border-bottom:2px solid transparent;transition:all .15s}
+.wb-tab:hover{color:var(--tx)}
+.wb-tab.active{color:var(--acc);border-bottom-color:var(--acc);font-weight:600}
+.wb-inspect-body{padding:14px;overflow-y:auto;flex:1}
+.wb-inspect-col{display:flex;flex-direction:column;flex:1;min-height:0}
+.wb-region-card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.wb-region-card h4{margin:0 0 6px;font-size:12px;color:var(--tx);display:flex;align-items:center;gap:6px}
+.wb-region-card ul{margin:4px 0 0;padding-left:18px;font-size:11px;color:var(--mut);line-height:1.6}
+.wb-region-card .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.wb-region-card .meta-cell{background:var(--bg);padding:5px 8px;border-radius:4px;font-size:11px;color:var(--tx)}
+.wb-region-card .meta-cell b{display:block;font-size:10px;margin-bottom:2px;font-weight:500;color:var(--mut)}
+.wb-draft-status{display:flex;gap:8px;align-items:center;padding:8px 12px;background:rgba(99,102,241,.12);border:1px solid var(--acc);border-radius:8px;margin-bottom:10px;font-size:12px}
+.wb-draft-status .lock{font-size:18px}
+.wb-draft-status .ltext{flex:1}
+.wb-draft-subj{font-size:14px;color:var(--tx);font-weight:600;margin:10px 0 6px}
+.wb-draft-body{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:12px;line-height:1.6;color:var(--tx);min-height:140px;white-space:pre-wrap;font-family:inherit}
+.wb-draft-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.wb-draft-actions button{padding:6px 12px;font-size:11px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--tx);cursor:pointer}
+.wb-draft-actions button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.wb-draft-actions button:hover{border-color:var(--acc)}
+.wb-hitl-banner{padding:10px 14px;background:rgba(239,68,68,.15);border:1px solid var(--err);border-radius:8px;margin-bottom:10px;font-size:12px;color:var(--err);font-weight:600}
+.wb-hitl-actions{display:flex;gap:8px;margin-top:10px}
+.wb-hitl-actions input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--tx);padding:7px 10px;font-size:12px}
+.wb-hitl-actions button{padding:8px 16px;border-radius:6px;border:0;font-weight:600;cursor:pointer;font-size:12px}
+.wb-hitl-actions .approve{background:var(--ok);color:#fff}
+.wb-hitl-actions .reject{background:transparent;border:1px solid var(--err);color:var(--err)}
+.wb-flash{animation:wbFlash 1.2s ease-out}
+@keyframes wbFlash{0%{box-shadow:0 0 0 0 var(--acc)}30%{box-shadow:0 0 0 3px var(--acc)}100%{box-shadow:0 0 0 0 transparent}}
+.wb-chat-hd{display:flex;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--card);flex-shrink:0}
+.wb-bind-pill{font-size:11px;padding:4px 10px;border-radius:14px;background:rgba(99,102,241,.18);color:var(--acc2);border:1px solid var(--acc2);white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.wb-bind-pill.unbound{background:rgba(139,150,184,.18);color:var(--mut);border-color:var(--line)}
+.wb-chat-thread{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.wb-msg{max-width:92%;padding:10px 12px;border-radius:12px;font-size:12.5px;line-height:1.6;animation:wbFadeIn .3s ease-out}
+.wb-msg.user{align-self:flex-end;background:var(--acc);color:#fff;border-bottom-right-radius:3px}
+.wb-msg.agent{align-self:flex-start;background:var(--card);color:var(--tx);border:1px solid var(--line);border-bottom-left-radius:3px}
+.wb-msg.sys{align-self:center;background:transparent;color:var(--mut);font-size:11px;font-style:italic;padding:4px 0;border:0}
+.wb-msg .ts{display:block;font-size:10px;color:var(--mut);margin-top:6px;opacity:.7}
+.wb-msg.user .ts{color:rgba(255,255,255,.7)}
+.wb-badge-strip{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.wb-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:10px;font-family:Consolas,monospace}
+.wb-badge.ok{background:rgba(34,197,94,.18);color:var(--ok);border:1px solid rgba(34,197,94,.4)}
+.wb-badge.locked{background:rgba(180,83,9,.2);color:var(--lock);border:1px solid rgba(180,83,9,.5)}
+.wb-badge.violation{background:rgba(239,68,68,.18);color:var(--err);border:1px solid var(--err)}
+.wb-badge.skipped{background:rgba(139,150,184,.18);color:var(--mut);border:1px dashed var(--line)}
+.wb-badge .iron{color:var(--lock);font-weight:700}
+.wb-cite-chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 7px;border-radius:4px;background:rgba(99,102,241,.18);color:var(--acc2);border:1px solid rgba(99,102,241,.4);cursor:pointer;margin:0 2px;font-family:Consolas,monospace}
+.wb-cite-chip:hover{background:rgba(99,102,241,.32);text-decoration:none;color:var(--acc2)}
+.wb-cite-chip.mock{opacity:.7;border-style:dashed}
+.wb-trace-toggle{font-size:10px;color:var(--mut);cursor:pointer;margin-top:6px;display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:8px}
+.wb-trace-toggle:hover{color:var(--acc);border-color:var(--acc)}
+.wb-trace-block{margin-top:6px;padding:8px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-family:Consolas,monospace;font-size:10px;color:var(--mut);max-height:160px;overflow:auto;white-space:pre-wrap;display:none}
+.wb-trace-block.show{display:block}
+.wb-msg .label{display:inline-block;font-size:10px;color:var(--mut);margin-right:6px;text-transform:uppercase;letter-spacing:.5px}
+@keyframes wbFadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.wb-chat-input{padding:10px 14px;border-top:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.wb-chat-input textarea{width:100%;min-height:54px;max-height:120px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--tx);padding:8px 10px;font-size:12.5px;resize:vertical;font-family:inherit}
+.wb-chat-input .row{display:flex;gap:6px;align-items:center}
+.wb-chat-input .row button{padding:6px 12px;font-size:11px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--tx);cursor:pointer}
+.wb-chat-input .row button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.wb-chat-input .row .spacer{flex:1}
+.wb-chat-input .row .hint{font-size:10px;color:var(--mut)}
+.wb-preset-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.wb-preset-row button{font-size:10px;padding:3px 8px;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--mut);cursor:pointer}
+.wb-preset-row button:hover{color:var(--acc);border-color:var(--acc)}
+.wb-skill-console{position:fixed;right:0;top:50px;bottom:50px;width:480px;background:var(--card);border-left:1px solid var(--acc);box-shadow:-8px 0 24px rgba(0,0,0,.5);z-index:100;transform:translateX(100%);transition:transform .3s ease;display:flex;flex-direction:column}
+.wb-skill-console.open{transform:translateX(0)}
+.wb-skill-console-hd{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;background:var(--bg)}
+.wb-skill-console-hd h3{margin:0;font-size:13px;color:var(--tx);flex:1}
+.wb-skill-console-bd{flex:1;overflow-y:auto;padding:12px 16px;font-size:11.5px}
+.wb-skill-console-bd h4{margin:14px 0 6px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+.wb-skill-console-bd .strategy-pill{display:inline-block;padding:3px 10px;border-radius:10px;background:var(--acc);color:#fff;font-size:11px;font-weight:600}
+.wb-policy-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed var(--line);font-size:11px;color:var(--tx)}
+.wb-policy-row .toggle{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600}
+.wb-policy-row .on{background:rgba(34,197,94,.18);color:var(--ok)}
+.wb-policy-row .off{background:rgba(139,150,184,.18);color:var(--mut)}
+.wb-policy-row .locked{background:rgba(180,83,9,.2);color:var(--lock);cursor:not-allowed}
+.wb-skill-row{display:flex;gap:6px;align-items:center;padding:5px 8px;border-radius:4px;font-family:Consolas,monospace;font-size:10.5px;border-bottom:1px dashed rgba(42,51,82,.5)}
+.wb-skill-row .iron-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.wb-skill-row .iron-dot.det{background:var(--lock)}
+.wb-skill-row .iron-dot.llm{background:var(--acc2)}
+.wb-skill-row .iron-dot.none{background:var(--mut)}
+.wb-skill-row .nm{flex:1;color:var(--tx)}
+.wb-skill-row .en{font-size:9px;padding:1px 6px;border-radius:6px}
+.wb-skill-row .en.on{background:rgba(34,197,94,.18);color:var(--ok)}
+.wb-skill-row .en.off{background:rgba(139,150,184,.18);color:var(--mut)}
+.wb-audit-line{padding:4px 6px;border-bottom:1px dashed var(--line);font-family:Consolas,monospace;font-size:10px;color:var(--mut)}
+.wb-audit-line .t{color:var(--tx)}
+.wb-audit-line .v{color:var(--err)}
+.wb-footbar{height:28px;display:flex;gap:14px;align-items:center;padding:0 14px;font-size:11px;color:var(--mut);border-top:1px solid var(--line);background:var(--card);margin-top:6px;border-radius:6px}
+.wb-footbar b{color:var(--tx);font-weight:600;margin-left:4px}
+.wb-footbar .sep{color:var(--line)}
+.wb-footbar .lock-pill{background:rgba(180,83,9,.2);color:var(--lock);padding:2px 8px;border-radius:10px;font-weight:600;margin-left:auto}
+.wb-mail-head{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.wb-mail-head h2{margin:0 0 6px;font-size:15px;color:var(--tx)}
+.wb-mail-head .from-line{font-size:11px;color:var(--mut);line-height:1.6}
+.wb-mail-head .crumb{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.wb-crumb-pill{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--card2);color:var(--mut);border:1px solid var(--line)}
+.wb-crumb-pill.acc{background:var(--acc);color:#fff;border-color:var(--acc)}
+.wb-crumb-pill.ok{background:rgba(34,197,94,.18);color:var(--ok);border-color:rgba(34,197,94,.4)}
+.wb-crumb-pill.warn{background:rgba(245,158,11,.18);color:var(--warn);border-color:rgba(245,158,11,.4);cursor:pointer}
+.wb-crumb-pill.err{background:rgba(239,68,68,.18);color:var(--err);border-color:rgba(239,68,68,.4)}
+.wb-mail-body{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;font-size:12.5px;line-height:1.7;color:var(--tx);white-space:pre-wrap}
+.wb-mail-attachments{margin-top:10px;display:flex;gap:4px;flex-wrap:wrap}
+.wb-att-chip{font-size:10px;padding:3px 8px;border-radius:10px;background:var(--card2);border:1px solid var(--line);color:var(--tx)}
+.wb-empty{text-align:center;padding:60px 20px;color:var(--mut)}
+.wb-empty .icon{font-size:48px;margin-bottom:8px;opacity:.5}
+.wb-empty .hint{font-size:11px;margin-top:6px;color:var(--mut);opacity:.7}
+.wb-quick{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.wb-quick button{font-size:10.5px;padding:4px 10px;border-radius:12px;background:rgba(34,197,94,.1);color:var(--ok);border:1px solid rgba(34,197,94,.3);cursor:pointer}
+.wb-quick button:hover{background:rgba(34,197,94,.22)}
+@media (max-width:1280px){.wb-shell{grid-template-columns:240px 1fr 320px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏭 Union Manufacturing Export Agent</h1>
+  <span class="sub">v6.1.0-fusion · 全场景经 SkillDispatcher · 铁律①复合锁 · voice 透传 · 缓存隔离修复</span>
+  <span class="pill" id="enginePill">引擎: …</span>
+  <span class="pill" id="apiPill">API: …</span>
+  <button class="fb-btn" id="fbBtn" onclick="openFeedback()" aria-label="提交反馈">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+    <span>反馈</span>
+    <span class="badge-unread" id="unreadBadge" hidden>0</span>
+  </button>
+</header>
+
+<nav>
+  <button data-tab="models" aria-label="模型设置">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    模型设置
+  </button>
+  <button data-tab="demo" aria-label="黄金链 Demo">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    黄金链 Demo
+  </button>
+  <button data-tab="endpoints" aria-label="上传端口与文档">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2v6m6-6v6M5 8h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"/><circle cx="12" cy="15" r="2"/></svg>
+    上传端口
+  </button>
+  <button data-tab="threeD" aria-label="3D STEP 上传">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+    3D 上传
+  </button>
+  <button data-tab="rag" aria-label="RAG 知识入库">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+    RAG 入库
+  </button>
+  <button data-tab="feedback" aria-label="反馈邮箱">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+    反馈邮箱
+  </button>
+  <button data-tab="skills" aria-label="Skill 设置与调度">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+    Skill 设置
+  </button>
+  <button data-tab="workbench" class="active" aria-label="三栏智能体协作台 v4">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+    Workbench
+    <span class="badge-new">v4</span>
+  </button>
+  <button data-tab="mailbox" aria-label="邮件台 Gmail 主入口">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    邮件台
+    <span class="dot on" id="mailDot" hidden></span>
+  </button>
+  <button data-tab="v12" aria-label="V12 内核实时仪表板">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="9" y="9" width="6" height="6" fill="currentColor"/><line x1="2" y1="9" x2="5" y2="9"/><line x1="2" y1="15" x2="5" y2="15"/><line x1="19" y1="9" x2="22" y2="9"/><line x1="19" y1="15" x2="22" y2="15"/><line x1="9" y1="2" x2="9" y2="5"/><line x1="15" y1="2" x2="15" y2="5"/><line x1="9" y1="19" x2="9" y2="22"/><line x1="15" y1="19" x2="15" y2="22"/></svg>
+    V12 内核
+  </button>
+  <button data-tab="rfq" aria-label="RFQ 管线全生命周期">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+    RFQ 管线
+  </button>
+  <button data-tab="flywheel" aria-label="客户飞轮">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9h-9V3z" fill="currentColor" opacity=".35"/><circle cx="12" cy="12" r="2"/></svg>
+    飞轮
+  </button>
+  <button data-tab="ops" aria-label="运维诊断">
+    <svg class="icon-18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/><line x1="7" y1="7" x2="7.01" y2="7"/><line x1="7" y1="17" x2="7.01" y2="17"/></svg>
+    运维
+  </button>
+</nav>
+
+<main>
+  <!-- ===== 模型设置 ===== -->
+  <section id="tab-models" class="hidden">
+    <div class="toolbar">
+      <button class="primary" onclick="saveAll()">💾 保存配置</button>
+      <button class="ghost" onclick="probeAll()">🔍 测试全部连接</button>
+      <button class="ghost" onclick="loadCfg()">↻ 重新加载</button>
+      <span class="lat" id="cfgMeta"></span>
+    </div>
+    <div class="grid" id="modelGrid"></div>
+  </section>
+
+  <!-- ===== 黄金链 Demo ===== -->
+  <section id="tab-demo" class="hidden">
+    <div class="card">
+      <h3>RFQ Intake（Email → DFM → 报价 → 辟牟援推止 → HITL/Reply）</h3>
+      <label>询盘邮件正文</label>
+      <textarea id="dEmail">Please quote 50 pcs of 6061 aluminum motor brackets, 100x50x10mm, anodizing finish, tolerance IT7.</textarea>
+      <div class="flex" style="margin-top:10px">
+        <div><label>客户名</label><input type="text" id="dCust" value="Northwind Robotics"/></div>
+        <div><label>目的国</label><input type="text" id="dCountry" value="US"/></div>
+        <div><label>Incoterm</label><input type="text" id="dIncoterm" value="DDP"/></div>
+        <div><label>运输方式</label><input type="text" id="dShip" value="air"/></div>
+      </div>
+      <div class="row">
+        <label class="switch"><input type="checkbox" id="dUseLlm"/> 启用 LLM Planner（抽取/起草，引擎仍裁决数字）</label>
+        <button class="primary" onclick="runIntake()">▶ 运行黄金链</button>
+      </div>
+      <pre id="dOut" class="hidden"></pre>
+    </div>
+  </section>
+
+  <!-- ===== 端点 ===== -->
+  <section id="tab-endpoints" class="hidden">
+    <div class="card">
+      <h3>上传端口（所有数据模态）</h3>
+      <pre>POST /v1/upload/email    .eml/.msg/.txt   → stdlib email 解析
+POST /v1/upload/step     .step/.stp       → 真实 OCP B-rep 几何 + C1 特征
+POST /v1/upload/audio    .wav/.mp3        → funasr ASR（离线显式 MOCK）
+POST /v1/upload/pdf      .pdf             → pypdf
+POST /v1/upload/excel    .xlsx/.csv       → openpyxl/csv
+POST /v1/upload/image    .png/.jpg        → VLM 图纸感知
+POST /v1/upload/auto     任意             → 按扩展名路由
+POST /v1/upload/step-with-thumbnail  .step/.stp  → SVG 缩略图 + 几何摘要 (v2.4.0)
+POST /v1/rfq/intake      全模态一次收 → 黄金链
+POST /v1/rfq/{cid}/{analyze,quote,verify,approve,reply-draft,crm-sync,commercial,postmortem}
+GET  /v1/models/config · POST /v1/models/config · POST /v1/models/probe
+GET  /v1/model-router/status · /v1/agent-spec · /v1/guardrails/check · /v1/traces/{cid} · /health
+POST /v1/feedback · GET /v1/feedback · GET /v1/feedback/unread   (v2.4.0 控制台反馈邮箱)
+GET/POST /v1/skills/config · POST /v1/agent/task · POST /v1/agent/route · GET /v1/agent/openshell  (v3.0.0 NemoClaw)
+交互式 API 文档: <a href="/docs" target="_blank">/docs (Swagger UI)</a></pre>
+    </div>
+  </section>
+
+  <!-- ===== v2.4.0 3D STEP 上传 ===== -->
+  <section id="tab-threeD" class="hidden">
+    <div class="card">
+      <h3>3D STEP 上传 · 服务端 SVG 缩略图 + 几何摘要</h3>
+      <div class="note">把 .step / .stp 拖到下方虚线框，浏览器立即看到 bbox 缩略图与真实几何数据。引擎在 :7862 离线时降级显示提示，但 UI 不被阻断。</div>
+      <div id="threeDDrop" class="drag-zone" tabindex="0" role="button" aria-label="拖拽 STEP 文件或点击选择">
+        <svg class="icon-22" viewBox="0 0 24 24" aria-hidden="true" style="opacity:.7"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <div style="margin-top:8px;font-size:14px">拖拽 .step / .stp 文件到此处，或 <label for="threeDFile" style="color:var(--acc2);cursor:pointer;text-decoration:underline">点击选择</label></div>
+        <div style="margin-top:4px;font-size:11px">最大 20MB · 仅服务端解析几何，不留痕</div>
+        <input type="file" id="threeDFile" accept=".step,.stp" style="display:none"/>
+      </div>
+      <div id="threeDResult"></div>
+    </div>
+  </section>
+
+  <!-- ===== C2 RAG 知识入库 ===== -->
+  <section id="tab-rag" class="hidden">
+    <div class="card">
+      <h3>RAG 入库 · 上传文件 → 向量化检索</h3>
+      <div class="note">支持 email / pdf / excel / step / txt / zip (含嵌套 · GBK 文件名)。zip-slip 与越界条目会被显式拒绝、不落盘不入库。数据仅存本地, 不出网。</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
+        <input type="file" id="ragFile" style="flex:1;min-width:200px"/>
+        <input type="text" id="ragCustomer" placeholder="customer_id (可选)" style="width:160px"/>
+        <button id="ragUploadBtn" class="btn-primary">上传入库</button>
+      </div>
+      <div id="ragUploadResult" style="margin-top:8px;font-size:12px"></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px">
+        <input type="text" id="ragQuery" placeholder="检索已入库文档…" style="flex:1;min-width:200px"/>
+        <button id="ragSearchBtn" class="btn-ghost">检索</button>
+      </div>
+      <div id="ragSearchResult" style="margin-top:8px;font-size:12px"></div>
+      <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
+        <b style="font-size:12px">已入库文档</b>
+        <button id="ragDocsBtn" class="btn-ghost">刷新清单</button>
+      </div>
+      <div id="ragDocsResult" style="margin-top:6px;font-size:12px"></div>
+    </div>
+  </section>
+
+  <!-- ===== v2.4.0 反馈邮箱 ===== -->
+  <section id="tab-feedback" class="hidden">
+    <div class="card">
+      <h3>反馈邮箱 · 让产品更好用</h3>
+      <div class="note">提交后会同时 (1) 写入本机 SQLite (2) 唤起你的邮件客户端 (mailto) 发送副本。可随时关掉此功能。</div>
+      <label>类型 <span style="color:var(--err)">*</span></label>
+      <select id="fbType" style="width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);padding:8px;border-radius:7px;font-size:13px">
+        <option value="bug">🐞 Bug · 出错了 / 行为不符预期</option>
+        <option value="feature">✨ Feature · 希望加上某能力</option>
+        <option value="consult">💭 Consultation · 不知道怎么用</option>
+        <option value="other">📦 Other · 其它</option>
+      </select>
+      <label>标题 <span style="color:var(--err)">*</span></label>
+      <input type="text" id="fbTitle" maxlength="120" placeholder="一句话描述"/>
+      <label>详细描述 <span style="color:var(--err)">*</span></label>
+      <textarea id="fbBody" placeholder="发生了什么 / 你期望的行为 / 复现步骤"></textarea>
+      <label>回复邮箱 (可选)</label>
+      <input type="email" id="fbEmail" placeholder="you@example.com"/>
+      <input type="text" id="fbHoneypot" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true"/>
+      <div class="row">
+        <button class="primary" onclick="submitFeedback()">📨 提交反馈</button>
+        <button class="ghost" onclick="loadFeedbackList()">↻ 刷新历史</button>
+        <span class="lat" id="fbMeta"></span>
+      </div>
+      <div id="fbList" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <!-- ===== v3.0.0 Skill 设置 + NemoClaw 调度 ===== -->
+  <section id="tab-skills" class="hidden">
+    <div class="toolbar">
+      <button class="primary" onclick="saveSkillsCfg()">💾 保存 Skill 配置</button>
+      <button class="ghost" onclick="loadSkillsCfg()">↻ 重新加载</button>
+      <button class="ghost" onclick="probeOpenshell()">🛡 OpenShell 状态</button>
+      <span class="lat" id="skillsMeta"></span>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <h3>Dispatcher 策略 <span class="role">NemoClaw hybrid</span></h3>
+      <div class="note">LLM 在线则意图分类；离线自动规则路由。铁律① OpenShell 不可关闭。</div>
+      <div class="flex">
+        <div>
+          <label>调度策略</label>
+          <select id="dispStrategy" style="width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);padding:8px;border-radius:7px;font-size:13px">
+            <option value="auto">auto · LLM优先 + 规则兜底</option>
+            <option value="rules_only">rules_only · 纯规则（现场无LLM）</option>
+            <option value="llm">llm · 强制LLM（失败可回退）</option>
+          </select>
+        </div>
+        <div>
+          <label>意图路由 LLM 来源</label>
+          <select id="dispLlmSource" style="width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);padding:8px;border-radius:7px;font-size:13px">
+            <option value="models_yaml">models.yaml · llm（含 A/B）</option>
+            <option value="rules_only">不用模型</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <label class="switch"><input type="checkbox" id="dispFallback" checked/> LLM 失败时规则兜底</label>
+        <span class="badge on" id="ironLockBadge">铁律① 已锁定</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h3>OpenShell 策略</h3>
+      <div class="note">iron-rule-1 锁定确定性输出；hitl-required 高风险转人工；local-only 路径沙箱；skill-allowlist 白名单。</div>
+      <div id="openshellList" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h3>Skill 列表</h3>
+      <div class="note">启用/禁用单个 Skill；deterministic skill 受 iron-rule-1 保护，输出不可被 LLM 改写。</div>
+      <div id="skillsList" class="grid"></div>
+    </div>
+
+    <div class="card">
+      <h3>试调度 Agent Task</h3>
+      <div class="note">POST /v1/agent/task · 观察 route / trace / OpenShell</div>
+      <label>Intent（自然语言）</label>
+      <textarea id="taskIntent">客户上传 STEP + 询盘，想要 CNC 报价，50 件 6061 阳极氧化 IT7</textarea>
+      <label>Files（逗号分隔路径，可空）</label>
+      <input type="text" id="taskFiles" placeholder="data/samples/xxx.step"/>
+      <div class="row">
+        <button class="primary" onclick="runAgentTask()">▶ 执行调度</button>
+        <button class="ghost" onclick="previewRoute()">🧭 仅预览路由</button>
+        <span class="lat" id="taskMeta"></span>
+      </div>
+      <pre id="taskOut" class="hidden"></pre>
+      <div style="margin-top:12px">
+        <h3 style="font-size:14px">最近审计</h3>
+        <pre id="skillsAudit" class="hidden"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 邮件台 (Gmail 主入口, v3.0 #36) ===== -->
+  <section id="tab-mailbox" class="hidden">
+    <div class="toolbar">
+      <span class="sub">📬 Gmail 主入口 · 拖入 .eml/.mbox 或装载 Demo 场景</span>
+      <button class="ghost" onclick="Mail.refresh()">↻ 刷新</button>
+      <button class="ghost" onclick="Mail.toggleUpload()">⬆ 上传 .eml</button>
+      <input type="file" id="mailFileInput" accept=".eml,.mbox" multiple style="display:none" onchange="Mail.handleUpload(this.files)"/>
+      <span class="lat" id="mailMeta"></span>
+    </div>
+
+    <div class="gmail-bar" id="gmailBar">
+      <span class="gmail-state off" id="gmailState">⏸ Gmail 未连接</span>
+      <span id="gmailAccount" style="color:var(--mut);font-size:11px"></span>
+      <span class="gmail-spacer"></span>
+      <button class="primary" id="gmailToggleBtn" onclick="Gmail.toggleForm()">⚙ 设置</button>
+      <button id="gmailSyncBtn" onclick="Gmail.syncNow()" style="display:none">↓ 拉信</button>
+      <button id="gmailDisconnectBtn" onclick="Gmail.disconnect()" style="display:none;color:var(--err)">断开</button>
+    </div>
+
+    <div id="gmailForm" class="card hidden" style="margin-top:8px;padding:12px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label style="font-size:12px;color:var(--mut)">Gmail 邮箱 <span style="color:var(--warn)">(必填, 数据本地加密, 不外发)</span></label>
+        <input id="gmailEmail" type="email" placeholder="alice@gmail.com" style="background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--tx);padding:6px 10px;font-size:13px">
+        <label style="font-size:12px;color:var(--mut)">App Password <span style="color:var(--warn)">(16 位, 仅存本地 data/credentials.json + Fernet 加密)</span></label>
+        <input id="gmailAppPwd" type="password" placeholder="abcd-efgh-ijkl-mnop" style="background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--tx);padding:6px 10px;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace">
+        <label style="font-size:12px;color:var(--mut);display:flex;gap:6px;align-items:center">
+          <input id="gmailEnabled" type="checkbox" checked> 启用 Gmail IMAP 拉信 (铁律①默认禁, 显式开启)
+        </label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="primary" onclick="Gmail.connect()" style="padding:8px 16px">连接并测试</button>
+          <span id="gmailConnResult" style="font-size:12px"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="mailUploadArea" class="drag-zone hidden" style="margin-bottom:12px">
+      📂 拖入 Gmail 导出的 .eml 或 .mbox 文件<br>
+      <span class="hint" style="font-size:11px">Gmail → 邮件 → ⋯ → Show original → Download Original</span>
+    </div>
+
+    <div class="demo-bar">
+      <span class="sub" style="margin-right:6px">Demo:</span>
+      <button onclick="Mail.loadScenario('S1')">S1 可接</button>
+      <button onclick="Mail.loadScenario('S2')">S2 HITL</button>
+      <button onclick="Mail.loadScenario('S3')">S3 DFM</button>
+      <button onclick="Mail.loadScenario('S4')">S4 替代</button>
+      <button onclick="Mail.loadScenario('S5')">S5 精密</button>
+      <button onclick="Mail.loadScenario('M1')">M1 多模态</button>
+    </div>
+
+    <div class="mailbox-shell">
+      <div class="mail-list" id="mailList">
+        <div class="empty-state"><div class="big">📭</div>暂无邮件<br><span class="hint">点 Demo 按钮装载，或上传 .eml</span></div>
+      </div>
+      <div class="mail-detail" id="mailDetail">
+        <div class="empty-state"><div class="big">👈</div>选择一封邮件<br><span class="hint">点开任意邮件，右侧自动聚合 7 区</span></div>
+      </div>
+      <div class="mail-side" id="mailSide">
+        <div class="empty-state"><div class="big">📊</div>7 区待激活<br><span class="hint">点开一封信，自动拉取客户/图纸/RAG/未办/门禁/复盘/落地成本</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== V12 内核实时仪表板 ===== -->
+  <section id="tab-v12" class="hidden">
+    <div class="v12-shell">
+        <div class="v12-statusbar" id="v12StatusBar">
+          <span class="v12-led" id="v12Led"></span>
+          <span class="v12-ver" id="v12Ver">v12.0.0-Fusion</span>
+          <span class="v12-src" id="v12Src">探测中…</span>
+          <span class="v12-spacer"></span>
+          <button class="ghost" id="v12Refresh">↻ 刷新</button>
+          <span class="v12-ts" id="v12Ts">--</span>
+        </div>
+
+        <div class="v12-cards">
+          <div class="v12-card v12-card-acc">
+            <div class="v12-label">calc_quote 吞吐</div>
+            <div class="v12-value" id="v12QuoteTotal">--</div>
+            <div class="v12-foot">
+              <span>p50 <b id="v12QuoteP50">--</b> ms</span>
+              <span>p95 <b id="v12QuoteP95">--</b> ms</span>
+            </div>
+            <div class="v12-bar"><div id="v12QuoteBar"></div></div>
+          </div>
+
+          <div class="v12-card v12-card-warn">
+            <div class="v12-label">C1-C6 DFM 冲突</div>
+            <div class="v12-value" id="v12DfmTotal">--</div>
+            <div class="v12-buckets" id="v12Buckets">
+              <span class="v12-bk" data-b="C1">C1 <em id="v12C1">0</em></span>
+              <span class="v12-bk" data-b="C2">C2 <em id="v12C2">0</em></span>
+              <span class="v12-bk" data-b="C3">C3 <em id="v12C3">0</em></span>
+              <span class="v12-bk" data-b="C4">C4 <em id="v12C4">0</em></span>
+              <span class="v12-bk" data-b="C5">C5 <em id="v12C5">0</em></span>
+              <span class="v12-bk" data-b="C6">C6 <em id="v12C6">0</em></span>
+            </div>
+          </div>
+
+          <div class="v12-card v12-card-ok">
+            <div class="v12-label">sha256 审计链</div>
+            <div class="v12-value" id="v12AuditCount">--</div>
+            <ol class="v12-audit" id="v12AuditList"></ol>
+          </div>
+
+          <div class="v12-card v12-card-acc2">
+            <div class="v12-label">最近 trace 时间线</div>
+            <ul class="v12-traces" id="v12TraceList"></ul>
+          </div>
+        </div>
+
+        <div class="v12-footbar">
+          <span>trace 数 <b id="v12TraceCount">--</b></span>
+          <span>·</span>
+          <span>span 数 <b id="v12SpanCount">--</b></span>
+          <span>·</span>
+          <span>source <code id="v12SourceLabel">--</code></span>
+        </div>
+      </div>
+  </section>
+
+  <!-- ===== v4 Workbench 三栏智能体协作台 ===== -->
+  <section id="tab-workbench">
+    <div class="wb-shell">
+      <!-- 左栏：Inbox -->
+      <div class="wb-col">
+        <div class="wb-col-hd">
+          <h3>📬 Inbox</h3>
+          <span class="sub" id="wbInboxCount">0 封</span>
+        </div>
+        <div class="wb-col-bd">
+          <div class="wb-inbox-tools">
+            <input type="search" id="wbSearch" placeholder="搜索主题/发件人…" oninput="Workbench.filterInbox()">
+            <select id="wbFilter" onchange="Workbench.filterInbox()">
+              <option value="all">全部</option>
+              <option value="HITL">🛡 HITL</option>
+              <option value="BLOCKED">🚫 BLOCKED</option>
+              <option value="PASS">✅ PASS</option>
+            </select>
+          </div>
+          <div id="wbInboxList"></div>
+        </div>
+      </div>
+
+      <!-- 中栏：Inspector -->
+      <div class="wb-col wb-inspect-col">
+        <div class="wb-col-hd">
+          <h3>🔍 Inspector</h3>
+          <span class="sub" id="wbInspSub">—</span>
+        </div>
+        <div class="wb-golden-chain" id="wbGoldenChain"></div>
+        <div class="wb-tabs">
+          <div class="wb-tab active" data-itab="mail" onclick="Workbench.switchInspectTab('mail')">📧 邮件</div>
+          <div class="wb-tab" data-itab="draft" onclick="Workbench.switchInspectTab('draft')">📝 草稿</div>
+          <div class="wb-tab" data-itab="approval" onclick="Workbench.switchInspectTab('approval')">🛡 审批</div>
+          <div class="wb-tab" data-itab="regions" onclick="Workbench.switchInspectTab('regions')">📊 8 区</div>
+        </div>
+        <div class="wb-inspect-body" id="wbInspectBody"></div>
+      </div>
+
+      <!-- 右栏：Chat -->
+      <div class="wb-col">
+        <div class="wb-chat-hd">
+          <span class="wb-bind-pill unbound" id="wbBindPill">📧 未绑定邮件</span>
+          <button class="ghost" onclick="Workbench.toggleSkillConsole()" style="margin-left:auto;padding:4px 10px;font-size:11px;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--tx);cursor:pointer">▣ Skills</button>
+          <button class="ghost" onclick="Workbench.toggleModelsPanel()" style="padding:4px 10px;font-size:11px;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--tx);cursor:pointer">⚙ 模型</button>
+          <button class="ghost" onclick="Workbench.reset()" style="padding:4px 8px;font-size:11px;background:transparent;border:1px solid var(--line);border-radius:6px;color:var(--mut);cursor:pointer">🧹</button>
+        </div>
+        <div class="wb-chat-thread" id="wbChatThread"></div>
+        <div class="wb-chat-input">
+          <textarea id="wbChatText" placeholder="和 Agent 对话：Enter 发送 · Shift+Enter 换行 · Ctrl+K 命令面板" onkeydown="Workbench.onKey(event)"></textarea>
+          <div class="row">
+            <button class="primary" onclick="Workbench.send()">▶ 发送</button>
+            <span class="spacer"></span>
+            <span class="hint">意图预设：</span>
+          </div>
+          <div class="wb-preset-row">
+            <button onclick="Workbench.preset('📊 解析这封询盘的 RFQ')">📊 解析 RFQ</button>
+            <button onclick="Workbench.preset('💰 算一下报价')">💰 算报价</button>
+            <button onclick="Workbench.preset('🛡 跑一下门禁')">🛡 跑门禁</button>
+            <button onclick="Workbench.preset('📚 这个客户有什么历史？')">📚 客户历史</button>
+            <button onclick="Workbench.preset('📝 起草一份回复')">📝 起草</button>
+            <button onclick="Workbench.preset('✅ 批准这个报价')">✅ 批准</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wb-footbar">
+      <span>🔧 引擎:<b id="wbFbEngine">…</b></span>
+      <span class="sep">·</span>
+      <span>API:<b id="wbFbApi">…</b></span>
+      <span class="sep">·</span>
+      <span>LLM:<b id="wbFbLlm">offline (rules)</b></span>
+      <span class="sep">·</span>
+      <span>Dispatcher:<b id="wbFbDisp">auto</b></span>
+      <span class="sep">·</span>
+      <span>audit:<b id="wbFbAudit">0 (5min)</b></span>
+      <span class="lock-pill">🔒 iron-rule-1 LOCKED</span>
+    </div>
+
+    <!-- Skill Console 抽屉 -->
+    <div class="wb-skill-console" id="wbSkillConsole">
+      <div class="wb-skill-console-hd">
+        <h3>▣ Skills &amp; OpenShell</h3>
+        <button onclick="Workbench.toggleSkillConsole()" style="padding:4px 10px;font-size:11px;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--tx);cursor:pointer">✕ 关闭</button>
+      </div>
+      <div class="wb-skill-console-bd" id="wbSkillConsoleBody"></div>
+    </div>
+
+    <!-- Ctrl+K 命令面板 -->
+    <div id="wbPalette">
+      <div id="wbPalBox">
+        <input id="wbPalInput" placeholder="输入命令 (门禁 / 报价 / 批准 / 黄金链 / 打开 Skills)" autocomplete="off">
+        <div id="wbPalList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- v5.1.0 实时进度条 -->
+  <div class="wb-progress-bar" id="wbProgressBar"></div>
+  <div class="wb-progress-status" id="wbProgressStatus">⏳ 分析中...</div>
+
+  <!-- v5.1.0 模型配置侧栏 -->
+  <div class="wb-models-panel" id="wbModelsPanel">
+    <div class="wb-models-panel-hd">
+      <h3>⚙ 模型配置 (Timo v12 风格)</h3>
+      <button onclick="Workbench.toggleModelsPanel()" style="padding:3px 10px;background:var(--bg);border:1px solid var(--line);border-radius:4px;color:var(--tx);cursor:pointer;font-size:11px">✕</button>
+    </div>
+    <div class="wb-models-panel-bd" id="wbModelsPanelBody">
+      <h4>LLM (推理)</h4>
+      <div class="wb-model-row"><i class="ico on"></i><span class="nm">qwen3.8-27b</span><span class="ep">:1234/v1</span><span class="lat">--</span></div>
+      <div class="wb-model-row"><i class="ico on"></i><span class="nm">o3-mini</span><span class="ep">:8000/v1</span><span class="lat">--</span></div>
+      <h4>VLM (视觉)</h4>
+      <div class="wb-model-row"><i class="ico on"></i><span class="nm">qwen3.8-27b</span><span class="ep">:1234/v1</span><span class="lat">--</span></div>
+      <h4>Embedding (向量)</h4>
+      <div class="wb-model-row"><i class="ico on"></i><span class="nm">bge-m3</span><span class="ep">:1278/v1</span><span class="lat">--</span></div>
+      <h4>OCR (文字识别)</h4>
+      <div class="wb-model-row"><i class="ico off"></i><span class="nm">PaddleOCR</span><span class="ep">未配置</span><span class="lat">--</span></div>
+      <h4>ASR (语音)</h4>
+      <div class="wb-model-row"><i class="ico on"></i><span class="nm">Qwen3-ASR-0.6B</span><span class="ep">:8089</span><span class="lat">--</span></div>
+      <h4>DETERMINISTIC (确定性)</h4>
+      <div class="wb-model-row"><i class="ico on"></i><span class="nm">Timo v12</span><span class="ep">:7862 🔒</span><span class="lat">--</span></div>
+      <div style="margin-top:14px;padding:8px;background:var(--panel2);border-radius:6px;font-size:11px;color:var(--mut)">
+        💡 编辑器: <code>config/models.yaml</code> + UI: Models 卡片<br>
+        🔒 DETERMINISTIC 不可关 (铁律①)
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== RFQ 管线 (T2: 8 生命周期端点 + traces 全接) ===== -->
+  <section id="tab-rfq" class="hidden">
+    <div class="card">
+      <h3>RFQ 管线 — 全生命周期控制台</h3>
+      <div class="note">GET 状态 + analyze / quote / verify / reply-draft / crm-sync / commercial / approve / postmortem + traces。context 存于服务器内存 (_STORE)：先在 Demo 标签跑黄金链（或邮件台装载场景）再来这里。</div>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="rfqCid" placeholder="context_id (如 RFQ-20260920-xxxx)" style="flex:1"/>
+        <button class="primary" onclick="Rfq.load()">装载状态</button>
+        <button class="ghost" onclick="Rfq.useLast()">↩ 用最近 intake</button>
+      </div>
+      <div class="row" id="rfqStateBar" style="margin-top:8px"><span class="lat">未装载</span></div>
+      <div class="row" style="margin-top:8px;flex-wrap:wrap">
+        <button class="mini" onclick="Rfq.step('analyze')">▶ analyze</button>
+        <button class="mini" onclick="Rfq.step('quote')">▶ quote</button>
+        <button class="mini" onclick="Rfq.step('verify')">▶ verify</button>
+        <button class="mini" onclick="Rfq.step('reply-draft')">📝 reply-draft</button>
+        <button class="mini" onclick="Rfq.step('crm-sync')">🔄 crm-sync</button>
+        <button class="mini" onclick="Rfq.step('commercial')">🌐 commercial</button>
+        <button class="mini" onclick="Rfq.trace()">🔬 traces</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <input type="text" id="rfqApprover" value="human" style="width:110px" title="actor 轴: 批准人"/>
+        <input type="text" id="rfqComment" placeholder="approve 备注 (可选)" style="flex:1"/>
+        <button class="mini" onclick="Rfq.approve()">✓ approve (HITL→DONE, 落审计)</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <select id="rfqOutcome" style="width:90px;background:var(--card2);border:1px solid var(--line);color:var(--tx);padding:6px;border-radius:6px;font-size:12px">
+          <option value="won">won</option><option value="lost">lost</option>
+        </select>
+        <input type="number" id="rfqActualCost" placeholder="actual_cost" style="width:110px"/>
+        <input type="number" id="rfqLeadDays" placeholder="leadtime_days" style="width:120px"/>
+        <input type="text" id="rfqPmNote" placeholder="复盘备注" style="flex:1"/>
+        <button class="mini" onclick="Rfq.postmortem()">📊 postmortem (闭环)</button>
+      </div>
+      <pre id="rfqOut" class="hidden" style="max-height:420px;overflow:auto;font-size:11px;white-space:pre-wrap;margin-top:10px"></pre>
+    </div>
+  </section>
+
+  <!-- ===== 飞轮 (T3: /v1/flywheel/* 5 端点全接) ===== -->
+  <section id="tab-flywheel" class="hidden">
+    <div class="toolbar">
+      <button class="primary" onclick="Flywheel.refresh()">↻ 刷新飞轮</button>
+      <span class="lat" id="fwMeta">未加载</span>
+    </div>
+    <div class="grid" id="fwStats"></div>
+    <div class="card">
+      <h3>客户沙箱列表 <span class="role">GET /v1/flywheel/customers</span></h3>
+      <div id="fwCustomers" class="lat" style="margin-top:6px">未加载</div>
+    </div>
+    <div class="card">
+      <h3>客户详情 <span class="role">定价模型 / 报价历史 / 知识库</span></h3>
+      <div class="row" style="margin-top:6px">
+        <input type="text" id="fwCid" placeholder="customer_id (如 CUST-0001)" style="flex:1"/>
+        <button class="ghost" onclick="Flywheel.detail()">查看画像</button>
+      </div>
+      <pre id="fwDetail" class="hidden" style="max-height:300px;overflow:auto;font-size:11px;white-space:pre-wrap;margin-top:8px"></pre>
+    </div>
+    <div class="card">
+      <h3>手动记录 <span class="role">POST quote / outcome (知识回流)</span></h3>
+      <div class="row" style="margin-top:6px">
+        <input type="text" id="fwRecCust" placeholder="customer_id" style="width:140px"/>
+        <input type="text" id="fwRecCtx" placeholder="context_id" style="width:190px"/>
+        <input type="number" id="fwRecPrice" placeholder="unit_price" style="width:100px" step="0.01"/>
+        <select id="fwRecOutcome" style="width:80px;background:var(--card2);border:1px solid var(--line);color:var(--tx);padding:6px;border-radius:6px;font-size:12px">
+          <option value="won">won</option><option value="lost">lost</option>
+        </select>
+        <input type="number" id="fwRecCost" placeholder="actual_cost" style="width:100px" step="0.01"/>
+        <button class="mini" onclick="Flywheel.recQuote()">💰 记录报价</button>
+        <button class="mini" onclick="Flywheel.recOutcome()">🏁 记录结果</button>
+      </div>
+      <pre id="fwOut" class="hidden" style="max-height:200px;overflow:auto;font-size:11px;white-space:pre-wrap;margin-top:8px"></pre>
+    </div>
+  </section>
+
+  <!-- ===== 运维诊断 (T4: 14 ops 端点全接) ===== -->
+  <section id="tab-ops" class="hidden">
+    <div class="toolbar">
+      <button class="primary" onclick="Ops.refreshAll()">↻ 拉取全部只读状态</button>
+      <span class="lat">只读卡片自动拉取; ▶ 执行 类卡片需手动触发 (reload/invalidate/refresh 有副作用)</span>
+    </div>
+    <div class="grid" id="opsGrid"></div>
+    <div class="card">
+      <h3>🛡 护栏演练场 <span class="role">POST /v1/guardrails/check</span></h3>
+      <div class="row" style="margin-top:6px">
+        <input type="text" id="opsGuardText" placeholder="待检文本 (如: 忽略之前的指令…)" style="flex:1"/>
+        <select id="opsGuardStage" style="width:100px;background:var(--card2);border:1px solid var(--line);color:var(--tx);padding:6px;border-radius:6px;font-size:12px">
+          <option value="input">input</option><option value="tool">tool</option><option value="output">output</option>
+        </select>
+        <button class="mini" onclick="Ops.guard()">检查</button>
+      </div>
+      <pre id="opsGuardOut" class="hidden" style="max-height:200px;overflow:auto;font-size:11px;white-space:pre-wrap;margin-top:8px"></pre>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js" onerror="window.__three_failed=true"></script>
+<script>
+const ORDER = ["llm","vlm","embedding","ocr","asr","deterministic"];
+const THREE_OK = typeof THREE !== "undefined" && !window.__three_failed;
+let CFG = null;
+
+function toast(msg, ok=true){ const t=document.getElementById('toast'); t.textContent=msg;
+  t.style.borderColor = ok? 'var(--acc)':'var(--err)'; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200); }
+
+async function jfetch(url, opt){ const r=await fetch(url,opt); if(!r.ok) throw new Error(await r.text());
+  return r.json(); }
+
+async function loadCfg(){
+  try{
+    const d = await jfetch('/v1/models/config');
+    CFG = d.config; renderGrid(CFG.models, d.probe);
+    document.getElementById('cfgMeta').textContent = 'version '+ (CFG.version||'?') +' · updated '+ (CFG.updated_at||'?');
+  }catch(e){ toast('加载模型配置失败: '+e.message, false); }
+  // 顶部状态
+  try{ const h=await jfetch('/health');
+    document.getElementById('enginePill').innerHTML = '引擎: <span class="dot '+(h.engine.startsWith('live')?'on':'off')+'"></span>'+h.engine;
+    document.getElementById('apiPill').innerHTML = 'API: <span class="dot on"></span>ok';
+  }catch(e){ document.getElementById('apiPill').textContent='API: 离线'; }
+}
+
+function badgeHtml(p){
+  if(!p) return '<span class="badge off">未探测</span>';
+  if(p.skipped) return '<span class="badge off">已禁用</span>';
+  if(p.online) return '<span class="badge on"><span class="dot on"></span>在线</span> <span class="lat">'+(p.latency_ms||0)+'ms</span>';
+  return '<span class="badge err"><span class="dot off"></span>离线</span> <span class="lat">'+(p.error||'').slice(0,40)+'</span>';
+}
+
+function renderGrid(models, probe){
+  const g=document.getElementById('modelGrid'); g.innerHTML='';
+  const keys = ORDER.filter(k=>models[k]).concat(Object.keys(models).filter(k=>!ORDER.includes(k)));
+  for(const k of keys){
+    const m=models[k], p=(probe||{})[k], locked=!!m.locked;
+    const ab=(m.ab_test)||{}, alt=(ab.alternate)||{}, fb=(m.fallback)||{};
+    const strategy=(ab.strategy||'primary_only');
+    const showAb = !locked;  // deterministic 不显示 A/B
+    const el=document.createElement('div'); el.className='card'; el.id='card-'+k;
+    el.innerHTML = `
+      <h3>${m.label||k} <span class="role">${m.role||''}</span> ${locked?'<span class="lock">🔒 锁定</span>':''}</h3>
+      <div class="note">${m.note||m.usage||''}</div>
+      <label>Endpoint (Primary)</label>
+      <input type="text" id="ep-${k}" value="${m.endpoint||''}" ${locked?'readonly':''}/>
+      <label>Model (Primary)</label>
+      <input type="text" id="md-${k}" value="${m.model||''}" ${locked?'readonly':''}/>
+      <div class="row">
+        <label class="switch"><input type="checkbox" id="en-${k}" ${m.enabled!==false?'checked':''} ${locked?'disabled':''}/> 启用</label>
+        <button class="mini" onclick="probeOne('${k}')">测试连接</button>
+        <span id="st-${k}">${badgeHtml(p)}</span>
+      </div>
+      ${showAb ? `
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;color:var(--acc2);font-size:12px">⚖️ A/B 路由 / Fallback (v2.3.1)</summary>
+        <label>策略</label>
+        <select id="ab-${k}" style="width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);padding:6px;border-radius:6px;font-size:12px">
+          <option value="primary_only" ${strategy==='primary_only'?'selected':''}>primary_only（只用主端点）</option>
+          <option value="fallback"      ${strategy==='fallback'?'selected':''}>fallback（主离线则降级）</option>
+          <option value="ab_hash"       ${strategy==='ab_hash'?'selected':''}>ab_hash（按 request_id 稳定分流）</option>
+          <option value="ab_round_robin" ${strategy==='ab_round_robin'?'selected':''}>ab_round_robin（进程内交替）</option>
+        </select>
+        <label style="margin-top:8px">Alternate Endpoint</label>
+        <input type="text" id="ab-ep-${k}" value="${alt.endpoint||''}" placeholder="http://host:port/v1"/>
+        <label>Alternate Model</label>
+        <input type="text" id="ab-md-${k}" value="${alt.model||''}" placeholder="alt-model-name"/>
+        <label style="margin-top:8px">Fallback Endpoint（主离线时使用）</label>
+        <input type="text" id="fb-ep-${k}" value="${fb.endpoint||''}" placeholder="http://host:port/v1"/>
+        <label>Fallback Model</label>
+        <input type="text" id="fb-md-${k}" value="${fb.model||''}" placeholder="fallback-model"/>
+        <div class="row" style="margin-top:8px">
+          <span id="ab-st-${k}" class="lat">${abStatusHtml(p)}</span>
+        </div>
+      </details>` : `<div class="lock" style="margin-top:8px">确定性角色, 不可 A/B / fallback (报价/冲突/毛利走内核)</div>`}
+    `;
+    g.appendChild(el);
+  }
+  // funasr 网关
+  if(CFG && CFG.funasr_gateway){
+    const gw=CFG.funasr_gateway, p=(probe||{})['funasr_gateway'];
+    const el=document.createElement('div'); el.className='card';
+    el.innerHTML=`<h3>funasr 多模态网关 <span class="role">GATEWAY</span></h3>
+      <div class="note">ASR/RAG/VLM 统一入口（funasr-gui）</div>
+      <label>Endpoint</label><input type="text" id="ep-gw" value="${gw.endpoint||''}"/>
+      <div class="row"><button class="mini" onclick="probeAll()">测试连接</button><span>${badgeHtml(p)}</span></div>`;
+    g.appendChild(el);
+  }
+}
+
+function abStatusHtml(p){
+  if(!p) return '';
+  const parts=[];
+  if(p.alternate){ parts.push(`alt: ${p.alternate.online?'在线':'离线'} ${p.alternate.latency_ms||0}ms`); }
+  if(p.fallback){ parts.push(`fb: ${p.fallback.online?'在线':'离线'} ${p.fallback.latency_ms||0}ms`); }
+  if(p.alternate && p.alternate.strategy) parts.push(`(${p.alternate.strategy})`);
+  return parts.join(' · ');
+}
+
+async function probeOne(k){
+  document.getElementById('st-'+k).innerHTML='<span class="lat">探测中…</span>';
+  try{ const fd=new FormData(); fd.append('key',k);
+    const d=await jfetch('/v1/models/probe',{method:'POST',body:fd});
+    document.getElementById('st-'+k).innerHTML=badgeHtml(d[k]);
+  }catch(e){ document.getElementById('st-'+k).innerHTML='<span class="badge err">探测失败</span>'; }
+}
+
+async function probeAll(){
+  try{ const d=await jfetch('/v1/models/probe',{method:'POST'});
+    for(const k of Object.keys(d)) { const s=document.getElementById('st-'+k); if(s) s.innerHTML=badgeHtml(d[k]); }
+    toast('已探测全部模型端点');
+  }catch(e){ toast('探测失败: '+e.message,false); }
+}
+
+function collect(){
+  const models={};
+  for(const k of Object.keys(CFG.models)){
+    const m={...CFG.models[k]};
+    const ep=document.getElementById('ep-'+k), md=document.getElementById('md-'+k), en=document.getElementById('en-'+k);
+    if(ep) m.endpoint=ep.value.trim();
+    if(md && !md.readOnly) m.model=md.value.trim();
+    if(en && !en.disabled) m.enabled=en.checked;
+    // v2.3.1: A/B / fallback 字段 (deterministic 不含这些 input)
+    const stratEl=document.getElementById('ab-'+k);
+    if(stratEl){
+      const strat=stratEl.value;
+      const aep=(document.getElementById('ab-ep-'+k)||{}).value||'';
+      const amd=(document.getElementById('ab-md-'+k)||{}).value||'';
+      const fep=(document.getElementById('fb-ep-'+k)||{}).value||'';
+      const fmd=(document.getElementById('fb-md-'+k)||{}).value||'';
+      if(strat==='primary_only'){
+        delete m.ab_test; delete m.fallback;
+      } else if(strat==='fallback'){
+        m.ab_test={strategy:'fallback'};
+        if(fep && fmd) m.fallback={endpoint:fep.trim(),model:fmd.trim()};
+        else delete m.fallback;
+        delete m.ab_test.alternate;
+      } else {
+        // ab_hash / ab_round_robin
+        m.ab_test={strategy:strat, alternate:{endpoint:aep.trim(), model:amd.trim()}};
+        if(fep && fmd) m.fallback={endpoint:fep.trim(),model:fmd.trim()};
+        else delete m.fallback;
+      }
+    }
+    models[k]=m;
+  }
+  const out={...CFG, models};
+  const gw=document.getElementById('ep-gw');
+  if(gw && out.funasr_gateway) out.funasr_gateway={...out.funasr_gateway, endpoint:gw.value.trim()};
+  return out;
+}
+
+async function saveAll(){
+  try{
+    const payload=collect();
+    const d=await jfetch('/v1/models/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    CFG=d.config; renderGrid(CFG.models,d.probe); toast('✅ 模型配置已保存并生效');
+  }catch(e){ toast('保存失败: '+e.message,false); }
+}
+
+async function runIntake(){
+  const fd=new FormData();
+  fd.append('email_text',document.getElementById('dEmail').value);
+  fd.append('customer_name',document.getElementById('dCust').value);
+  fd.append('country',document.getElementById('dCountry').value);
+  fd.append('incoterm',document.getElementById('dIncoterm').value);
+  fd.append('shipping_mode',document.getElementById('dShip').value);
+  if(document.getElementById('dUseLlm').checked) fd.append('use_llm','true');
+  const out=document.getElementById('dOut'); out.classList.remove('hidden'); out.textContent='运行中…';
+  try{
+    const d=await jfetch('/v1/rfq/intake',{method:'POST',body:fd});
+    const r=d.result;
+    try{ localStorage.setItem('uea_last_cid', d.context_id); }catch(e){}
+    out.textContent = JSON.stringify({context_id:d.context_id, state:r.state, verify:r.verification_status,
+      engine:r.engine_source, quote:r.quote, commercial:r.commercial, llm_planner:r.llm_planner,
+      guardrails:r.guardrails, reasons:r.reasons, reply:r.reply,
+      trace:r.observability&&{spans:r.observability.span_count, trace_id:r.observability.trace_id}}, null, 2);
+    toast('黄金链完成: '+r.state+' / '+r.verification_status);
+  }catch(e){ out.textContent='错误: '+e.message; toast('运行失败',false); }
+}
+
+// tabs
+const ALL_TABS = ['models','demo','endpoints','threeD','rag','feedback','skills','workbench','mailbox','v12','rfq','flywheel','ops'];
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  ALL_TABS.forEach(t=>{const el=document.getElementById('tab-'+t); if(el) el.classList.toggle('hidden', t!==b.dataset.tab);});
+  if(b.dataset.tab==='mailbox'){ Mail.refresh(); Gmail.refresh(); }
+  if(b.dataset.tab==='v12'){ V12.refresh(); }
+  // 进入反馈 tab 时拉一次历史
+  if(b.dataset.tab==='feedback') loadFeedbackList();
+  // 进入 3D tab 时聚焦拖拽区
+  if(b.dataset.tab==='threeD') document.getElementById('threeDDrop')?.focus();
+  // 进入 Skill 设置 tab
+  if(b.dataset.tab==='skills') loadSkillsCfg();
+  // T2/T3/T4: RFQ 管线带回最近 cid; 飞轮/运维进页即拉
+  if(b.dataset.tab==='rfq') Rfq.enter();
+  if(b.dataset.tab==='flywheel') Flywheel.refresh();
+  if(b.dataset.tab==='ops') Ops.refreshAll();
+});
+
+// ---------------- v3.0.0 Skill 设置面板 ----------------
+let _skillsCfg = null;
+async function loadSkillsCfg(){
+  try{
+    const d = await jfetch('/v1/skills/config');
+    _skillsCfg = d;
+    const s = d.summary || {};
+    const disp = s.dispatcher || {};
+    const ds = document.getElementById('dispStrategy');
+    const ls = document.getElementById('dispLlmSource');
+    const fb = document.getElementById('dispFallback');
+    if(ds) ds.value = disp.strategy || 'auto';
+    if(ls) ls.value = (s.model_router && s.model_router.source) || disp.llm_role && 'models_yaml' || 'models_yaml';
+    if(ls && disp.strategy==='rules_only') ls.value='rules_only';
+    if(fb) fb.checked = disp.fallback_rules !== false;
+    // OpenShell
+    const osList = document.getElementById('openshellList');
+    const policies = (s.openshell||d.openshell&&d.openshell.policies)||[];
+    if(osList){
+      osList.innerHTML = policies.map(p=>{
+        const locked = !!p.locked;
+        return `<div class="card">
+          <h3>${p.id} ${locked?'<span class="role">LOCKED</span>':''}</h3>
+          <div class="note">${p.description|| (locked?'铁律①: 确定性输出不可改写':'OpenShell policy')}</div>
+          <label class="switch">
+            <input type="checkbox" data-policy="${p.id}" ${p.enabled!==false?'checked':''} ${locked?'disabled':''}/>
+            启用 ${locked?'<span class="lock">(不可关闭)</span>':''}
+          </label>
+        </div>`;
+      }).join('');
+    }
+    // Skills
+    const skList = document.getElementById('skillsList');
+    const skills = s.skills || d.runtime_skills || [];
+    if(skList){
+      skList.innerHTML = skills.map(sk=>{
+        const id = sk.id;
+        const det = (sk.iron_rule==='deterministic');
+        return `<div class="card">
+          <h3>${sk.label||id} <span class="role">${sk.iron_rule||''}</span></h3>
+          <div class="note">${sk.description||''}</div>
+          <div class="lat">openshell: ${(sk.openshell||[]).join(', ')||'—'}</div>
+          <div class="row">
+            <label class="switch">
+              <input type="checkbox" data-skill="${id}" ${sk.enabled!==false?'checked':''}/>
+              启用
+            </label>
+            ${det?'<span class="badge on">iron-rule-1</span>':''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+    const badge = document.getElementById('ironLockBadge');
+    if(badge){ badge.textContent='铁律① 已锁定'; badge.className='badge on'; }
+    document.getElementById('skillsMeta').textContent =
+      `skills: ${skills.length} · strategy: ${disp.strategy||'auto'} · updated: ${s.updated_at||'—'}`;
+  }catch(e){
+    document.getElementById('skillsMeta').textContent = 'Skill 配置 API 未就绪: '+e.message;
+  }
+}
+
+async function saveSkillsCfg(){
+  const payload = {
+    version: 3,
+    dispatcher: {
+      strategy: document.getElementById('dispStrategy').value,
+      llm_role: 'llm',
+      fallback_rules: document.getElementById('dispFallback').checked,
+      max_skills_per_task: (_skillsCfg&&_skillsCfg.summary&&_skillsCfg.summary.dispatcher&&_skillsCfg.summary.dispatcher.max_skills_per_task)||8,
+      audit_max: (_skillsCfg&&_skillsCfg.summary&&_skillsCfg.summary.dispatcher&&_skillsCfg.summary.dispatcher.audit_max)||50,
+    },
+    model_router: { source: document.getElementById('dispLlmSource').value==='rules_only'?'rules_only':'models_yaml' },
+    skills: {},
+    openshell: {},
+  };
+  // merge existing meta
+  const existingSkills = (_skillsCfg && _skillsCfg.summary && _skillsCfg.summary.skills) || [];
+  existingSkills.forEach(sk=>{
+    const el = document.querySelector(`input[data-skill="${sk.id}"]`);
+    payload.skills[sk.id] = {
+      enabled: el ? el.checked : sk.enabled!==false,
+      label: sk.label, description: sk.description,
+      iron_rule: sk.iron_rule, openshell: sk.openshell||[],
+    };
+  });
+  const existingPol = (_skillsCfg && _skillsCfg.summary && _skillsCfg.summary.openshell) || [];
+  existingPol.forEach(p=>{
+    const el = document.querySelector(`input[data-policy="${p.id}"]`);
+    const enabled = p.locked ? true : (el ? el.checked : p.enabled!==false);
+    payload.openshell[p.id] = { enabled, locked: !!p.locked };
+  });
+  // force iron-rule-1
+  payload.openshell['iron-rule-1'] = { enabled: true, locked: true };
+  try{
+    const r = await jfetch('/v1/skills/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(r && r.saved){ toast('✅ Skill 配置已保存'); loadSkillsCfg(); }
+  }catch(e){ toast('保存失败: '+e.message,false); }
+}
+
+async function probeOpenshell(){
+  try{
+    const d = await jfetch('/v1/agent/openshell');
+    const pre = document.getElementById('skillsAudit');
+    pre.classList.remove('hidden');
+    pre.textContent = JSON.stringify(d,null,2);
+  }catch(e){ toast('OpenShell 状态失败: '+e.message,false); }
+}
+
+async function previewRoute(){
+  const intent = document.getElementById('taskIntent').value.trim();
+  const files = document.getElementById('taskFiles').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const out = document.getElementById('taskOut');
+  out.classList.remove('hidden'); out.textContent='路由中…';
+  try{
+    const d = await jfetch('/v1/agent/route',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({intent, files})});
+    out.textContent = JSON.stringify(d,null,2);
+  }catch(e){ out.textContent='错误: '+e.message; }
+}
+
+async function runAgentTask(){
+  const intent = document.getElementById('taskIntent').value.trim();
+  const files = document.getElementById('taskFiles').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const out = document.getElementById('taskOut');
+  out.classList.remove('hidden'); out.textContent='调度中…';
+  try{
+    const d = await jfetch('/v1/agent/task',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({intent, files, driver:'console'})});
+    const slim = {
+      dispatch_id: d.dispatch_id, driver: d.driver, strategy: d.strategy, route: d.route,
+      planned: d.planned_skills, executed: d.executed_skills,
+      hitl_required: d.hitl_required, hitl_reasons: d.hitl_reasons,
+      openshell_violations: d.openshell_violations,
+      iron_rule_override_blocked: d.iron_rule_override_blocked,
+      result_keys: d.result && Object.keys(d.result),
+      quote: d.result && {unit_price:d.result.unit_price, final_price:d.result.final_price,
+                          verification_status:d.result.verification_status},
+      trace: (d.trace||[]).map(t=>({skill:t.skill, ok:t.ok, iron:t.iron_rule, sha:t.output_sha256})),
+    };
+    out.textContent = JSON.stringify(slim,null,2);
+    document.getElementById('taskMeta').textContent =
+      `hitl=${d.hitl_required} · skills=${(d.executed_skills||[]).length} · ${(d.latency_ms||0)}ms`;
+    probeOpenshell();
+  }catch(e){ out.textContent='错误: '+e.message; toast('调度失败',false); }
+}
+
+// ---------------- v2.4.0 反馈邮箱 ----------------
+async function refreshUnread(){
+  try{
+    const d=await jfetch('/v1/feedback/unread');
+    const badge=document.getElementById('unreadBadge');
+    if(!badge) return;
+    if(d.unread>0){ badge.textContent=d.unread>99?'99+':d.unread; badge.hidden=false; }
+    else badge.hidden=true;
+  }catch(e){ /* API 没启就不显示 */ }
+}
+
+function openFeedback(){
+  // 切到 feedback tab
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  const btn=document.querySelector('nav button[data-tab="feedback"]');
+  if(btn){ btn.classList.add('active'); btn.click(); }
+}
+
+async function submitFeedback(){
+  const type=document.getElementById('fbType').value;
+  const title=document.getElementById('fbTitle').value.trim();
+  const body=document.getElementById('fbBody').value.trim();
+  const email=document.getElementById('fbEmail').value.trim();
+  const honeypot=document.getElementById('fbHoneypot').value;
+  if(!title||!body){ toast('标题与描述必填',false); return; }
+  // 1) POST 后端
+  let saved=false;
+  try{
+    const r=await jfetch('/v1/feedback',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type,title,body,email,honeypot,source:'webui'})});
+    if(r&&r.id){ saved=true; toast(`✅ 已提交 #${r.id}`); }
+  }catch(e){ /* 后端不在线仍允许 mailto */ }
+  // 2) mailto 唤起
+  const subj=`[Union Export Agent · ${type}] ${title}`.slice(0,120);
+  const mbody=`类型: ${type}\n标题: ${title}\n\n${body}\n\n--\n回复邮箱: ${email||'(未填)'}\n客户端: ${navigator.userAgent}`;
+  const mailto=`mailto:agent-feedback@union-export.example?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(mbody)}`;
+  try{ window.location.href=mailto; }catch(e){}
+  // 3) 清空表单 + 刷新历史
+  document.getElementById('fbTitle').value='';
+  document.getElementById('fbBody').value='';
+  document.getElementById('fbEmail').value='';
+  document.getElementById('fbHoneypot').value='';
+  loadFeedbackList();
+  refreshUnread();
+}
+
+async function loadFeedbackList(){
+  try{
+    const d=await jfetch('/v1/feedback?limit=10');
+    const el=document.getElementById('fbList');
+    if(!d.items||!d.items.length){ el.innerHTML='<div class="note">尚无反馈, 来当第一个 ✨</div>'; return; }
+    el.innerHTML = d.items.map(x=>`
+      <div class="fb-item">
+        <span class="badge ${x.status==='new'?'':'off'}" style="float:right">${x.status}</span>
+        <b>[${x.type}]</b>${x.title}
+        <div class="meta-line">#${x.id} · ${x.created_at} · ${x.email||'(匿名)'}${x.source?' · '+x.source:''}</div>
+        <div style="margin-top:6px;color:var(--tx);white-space:pre-wrap">${(x.body||'').replace(/</g,'&lt;')}</div>
+      </div>`).join('');
+    document.getElementById('fbMeta').textContent=`共 ${d.count} 条`;
+  }catch(e){
+    document.getElementById('fbList').innerHTML='<div class="note">反馈 API 未就绪 (后端离线或路由未注册)</div>';
+  }
+}
+
+// ---------------- v2.4.0 3D STEP 上传 ----------------
+function initThreeD(){
+  const drop=document.getElementById('threeDDrop');
+  const file=document.getElementById('threeDFile');
+  if(!drop||!file) return;
+  const onFiles=(files)=>{
+    if(files&&files[0]) uploadStep(files[0]);
+  };
+  drop.addEventListener('click',(e)=>{ if(e.target.tagName!=='LABEL') file.click(); });
+  file.addEventListener('change',(e)=>onFiles(e.target.files));
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,(e)=>{e.preventDefault();drop.classList.add('drag');}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,(e)=>{e.preventDefault();drop.classList.remove('drag');}));
+  drop.addEventListener('drop',(e)=>onFiles(e.dataTransfer.files));
+  // 键盘: Enter / Space 触发 file 选择
+  drop.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); file.click(); } });
+}
+
+async function uploadStep(f){
+  const res=document.getElementById('threeDResult');
+  if(!f.name.match(/\.(step|stp)$/i)){ res.innerHTML='<div class="note" style="color:var(--err)">只支持 .step / .stp</div>'; return; }
+  if(f.size>20*1024*1024){ res.innerHTML='<div class="note" style="color:var(--err)">文件超过 20MB 上限</div>'; return; }
+  res.innerHTML='<div class="note">⏳ 解析中…</div>';
+  const fd=new FormData(); fd.append('file',f);
+  try{
+    const d=await jfetch('/v1/upload/step-with-thumbnail',{method:'POST',body:fd});
+    renderThreeD(d);
+    toast('✅ STEP 已解析'+(d.cached?' (从缓存)':''));
+  }catch(e){
+    res.innerHTML=`<div class="note" style="color:var(--err)">解析失败: ${String(e).slice(0,200)}</div>`;
+  }
+}
+
+function renderThreeD(d){
+  const res=document.getElementById('threeDResult');
+  const bb=d.bbox||{};
+  const cells=[
+    ['L', bb.x_max!=null?`${(bb.x_max-bb.x_min).toFixed(2)} mm`:'—'],
+    ['W', bb.y_max!=null?`${(bb.y_max-bb.y_min).toFixed(2)} mm`:'—'],
+    ['H', bb.z_max!=null?`${(bb.z_max-bb.z_min).toFixed(2)} mm`:'—'],
+    ['体积', d.volume_cm3!=null?`${d.volume_cm3.toFixed(2)} cm³`:'—'],
+    ['质量', d.mass_g!=null?`${d.mass_g.toFixed(2)} g`:'—'],
+    ['特征', d.features_count!=null?`${d.features_count} 个`:'—'],
+    ['SHA-256/16', d.sha256_16||'—'],
+    ['缓存', d.cached?'命中':'新生成'],
+    ['来源', d._source||'—'],
+  ];
+  res.innerHTML = `
+    <div class="thumb-frame">
+      <div class="note" style="margin-top:0">${d.filename} · ${d.cached?'(从缓存命中)':'(新解析)'}</div>
+      ${d.svg||'<div class="note">无 SVG</div>'}
+    </div>
+    <div class="meta-grid">
+      ${cells.map(([k,v])=>`<div class="meta-cell"><b>${k}</b>${v}</div>`).join('')}
+    </div>`;
+}
+
+initThreeD();
+
+// ---------------- C2 RAG 入库 ----------------
+function initRag(){
+  const ub=document.getElementById('ragUploadBtn');
+  const sb=document.getElementById('ragSearchBtn');
+  const db=document.getElementById('ragDocsBtn');
+  if(!ub||!sb) return;
+  ub.addEventListener('click', ragUpload);
+  sb.addEventListener('click', ragSearch);
+  if(db) db.addEventListener('click', ragDocs);
+}
+async function ragDocs(){
+  const res=document.getElementById('ragDocsResult');
+  res.innerHTML='<div class="note">加载中…</div>';
+  try{
+    const d=await jfetch('/v1/rag/docs');
+    const docs=d.docs||[];
+    res.innerHTML = docs.length ? docs.map(x=>`<div class="meta-cell" style="margin:3px 0"><b>${x.id}</b> · ${x.chars} 字${x.customer_id?' · '+x.customer_id:''} · <a href="#" data-ragdel="${x.id}" style="color:var(--err)">删除</a></div>`).join('') : '<div class="note">库为空</div>';
+    res.querySelectorAll('[data-ragdel]').forEach(a=>a.addEventListener('click',async(e)=>{e.preventDefault();await ragDel(a.dataset.ragdel);}));
+  }catch(e){ res.innerHTML=`<div class="note" style="color:var(--err)">失败: ${String(e).slice(0,120)}</div>`; }
+}
+async function ragDel(id){
+  try{ await jfetch('/v1/rag/docs/'+encodeURIComponent(id),{method:'DELETE'}); toast('🗑 已删除 '+id); ragDocs(); }
+  catch(e){ toast('删除失败: '+String(e).slice(0,80)); }
+}
+async function ragUpload(){
+  const f=document.getElementById('ragFile').files[0];
+  const res=document.getElementById('ragUploadResult');
+  if(!f){ res.innerHTML='<div class="note" style="color:var(--err)">请先选择文件</div>'; return; }
+  res.innerHTML='<div class="note">⏳ 上传入库中…</div>';
+  const fd=new FormData(); fd.append('file',f);
+  const cid=document.getElementById('ragCustomer').value.trim();
+  if(cid) fd.append('customer_id', cid);
+  try{
+    const d=await jfetch('/v1/rag/ingest',{method:'POST',body:fd});
+    const rej=(d.rejected||[]).length;
+    res.innerHTML=`<div class="note">✅ 入库 ${d.n_docs} 篇${rej?` · 拒绝 ${rej} 项 (zip_slip 等)`:' '} · 来源 ${d.embed_source||'—'}</div>`;
+    toast(d.ok?'✅ 已入 RAG':'⚠ 无可入库文本');
+  }catch(e){ res.innerHTML=`<div class="note" style="color:var(--err)">失败: ${String(e).slice(0,200)}</div>`; }
+}
+async function ragSearch(){
+  const q=document.getElementById('ragQuery').value.trim();
+  const res=document.getElementById('ragSearchResult');
+  if(!q){ res.innerHTML='<div class="note" style="color:var(--err)">请输入检索词</div>'; return; }
+  res.innerHTML='<div class="note">🔎 检索中…</div>';
+  const cid=document.getElementById('ragCustomer').value.trim();
+  const p=new URLSearchParams({q}); if(cid) p.set('customer_id', cid);
+  try{
+    const d=await jfetch('/v1/rag/search?'+p.toString());
+    const hits=d.hits||[];
+    res.innerHTML = hits.length ? hits.map(h=>`<div class="meta-cell" style="margin:4px 0"><b>${h.id}</b> · score ${h.score.toFixed(3)}<br><span class="note">${(h.payload&&h.payload.text||'').slice(0,120)}</span></div>`).join('') : '<div class="note">无命中</div>';
+  }catch(e){ res.innerHTML=`<div class="note" style="color:var(--err)">失败: ${String(e).slice(0,200)}</div>`; }
+}
+initRag();
+loadCfg();
+loadSkillsCfg();
+refreshUnread();
+setInterval(refreshUnread, 60000);  // 1 分钟轮询 unread badge
+
+/* ===== v3.0 #36 邮件台 IIFE 命名空间 ===== */
+window.Mail = (function(){
+  let currentMailId = null;
+  const regions = ['customer','geometry','rag','pending','verification','postmortem','commercial','trace'];
+  const regionLabels = {
+    customer: '👤 客户',
+    geometry: '📐 图纸',
+    rag: '🔍 RAG',
+    pending: '📋 未办',
+    verification: '🛡 门禁',
+    postmortem: '📊 复盘',
+    commercial: '💰 落地成本',
+    trace: '🔬 Trace',
+  };
+
+  function el(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstChild}
+
+  async function jget(url){const r=await fetch(url);if(!r.ok)throw new Error('http '+r.status);return await r.json()}
+  async function jpost(url, body){
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+    if(!r.ok){const t=await r.text();throw new Error(t||'http '+r.status)}
+    return await r.json();
+  }
+  async function uploadFile(file){
+    const fd=new FormData();fd.append('file',file);
+    const r=await fetch('/v1/upload/email',{method:'POST',body:fd});
+    if(!r.ok)throw new Error('upload '+r.status);
+    return await r.json();
+  }
+
+  async function refresh(){
+    try{
+      const d=await jget('/v1/mail/inbox?limit=50');
+      renderList(d.items||[]);
+      document.getElementById('mailMeta').textContent = `${d.count} 封 · source=${d.source||'local'}`;
+      document.getElementById('mailDot').hidden = d.count===0;
+    }catch(e){toast('❌ inbox 失败: '+e.message,false)}
+  }
+
+  function renderList(items){
+    const root=document.getElementById('mailList');
+    if(!items.length){
+      root.innerHTML='<div class="empty-state"><div class="big">📭</div>暂无邮件<br><span class="hint">点 Demo 按钮装载，或上传 .eml</span></div>';
+      return;
+    }
+    root.innerHTML='';
+    items.forEach(it=>{
+      // P0 标记 (方案 D): pending ledger 状态 + driver 徽标
+      const pend=it.pending;
+      let chips='';
+      if(pend){
+        const st=pend.state||'';
+        const stCls = (st==='DONE')?'on' : (st==='FAILED'||st==='DEAD')?'err':'';
+        chips=`<span class="badge ${stCls}">${esc(st)}</span>`
+            + `<span class="chip-driver" title="驱动来源">${esc(pend.driver||'email')}</span>`;
+        if(pend.attempts) chips+=`<span class="chip-driver" title="重试次数">×${pend.attempts}</span>`;
+      }
+      const node=el(`<div class="mail-item" data-id="${it.mail_id}">
+        <div class="from">${esc(it.from||'(unknown)')}</div>
+        <div class="subject">${esc(it.subject||'(no subject)')}</div>
+        <div class="meta-line">
+          <span>${fmtTime(it.received_at)}</span>
+          <span class="badge-list">${(it.badges||[]).map(b=>`<span class="badge">${b}</span>`).join('')}${chips}</span>
+          <span style="margin-left:auto">📎 ${it.attachments_count||0}</span>
+        </div></div>`);
+      node.onclick=()=>openMail(it.mail_id);
+      root.appendChild(node);
+    });
+  }
+
+  async function openMail(mailId){
+    currentMailId=mailId;
+    document.querySelectorAll('.mail-item').forEach(n=>n.classList.toggle('active', n.dataset.id===mailId));
+    try{
+      const d=await jget('/v1/mail/'+encodeURIComponent(mailId));
+      renderDetail(d);
+      loadAllRegions(mailId);
+    }catch(e){toast('❌ 详情失败: '+e.message,false)}
+  }
+
+  async function _findMailByContext(cid){
+    // 简化版: 先试 cid 作为 mail_id (常见 1:1 映射), 失败则扫 inbox meta
+    try{ const d=await jget(`/v1/mail/${encodeURIComponent(cid)}`); if(d&&d.mail_id) return cid; }catch(e){}
+    try{
+      const inbox=await jget('/v1/mail/inbox?limit=200');
+      for(const it of (inbox.items||[])){
+        try{
+          const v=await jget(`/v1/mail/${encodeURIComponent(it.mail_id)}/context/hitl`);
+          if(v&&v.context_id===cid) return it.mail_id;
+        }catch(e){/* skip */}
+      }
+    }catch(e){}
+    return null;
+  }
+
+  async function openContext(cid){
+    if(!cid){ toast('context_id 缺失', false); return; }
+    const mid=await _findMailByContext(cid);
+    if(mid){
+      if(mid===currentMailId){ toast('已在当前邮件中'); return; }
+      openMail(mid);
+    }else{
+      toast(`context_id ${cid} 不在本地 mailbox (仅显示元数据)`, false);
+    }
+  }
+
+  function focusRegion(name){
+    const r=document.querySelector(`.region[data-region="${name}"]`);
+    if(!r){ toast(`区域 ${name} 不存在`, false); return; }
+    r.scrollIntoView({behavior:'smooth', block:'center'});
+    const old=r.style.boxShadow;
+    r.style.boxShadow='0 0 0 2px var(--acc)';
+    setTimeout(()=>{ r.style.boxShadow=old||''; }, 1200);
+  }
+
+  async function focusHITL(){
+    for(let i=0;i<10;i++){
+      const p=document.querySelector('.hitl-panel');
+      if(p){
+        p.scrollIntoView({behavior:'smooth', block:'center'});
+        const old=p.style.boxShadow;
+        p.style.boxShadow='0 0 0 2px var(--warn)';
+        setTimeout(()=>{ p.style.boxShadow=old||''; }, 1200);
+        return;
+      }
+      await new Promise(r=>setTimeout(r,100));
+    }
+    toast('审批面板尚未就绪', false);
+  }
+
+  function renderBreadcrumb(mailId, regionsByName){
+    const elc=document.getElementById('mailCrumb');
+    if(!elc) return;
+    const v=regionsByName.verification || {};
+    const g=regionsByName.geometry || {};
+    const c=regionsByName.commercial || {};
+    const t=regionsByName.trace || {};
+    const r=regionsByName.customer || {};
+    const cid=(regionsByName.hitl && regionsByName.hitl.context_id) || '';
+    const pills=[];
+    pills.push(`<span class="crumb-pill acc">📧 ${esc(mailId.slice(0,16))}</span>`);
+    if(cid) pills.push(`<span class="crumb-pill crumb-link" onclick="Mail.openContext('${esc(cid)}')">🔍 ${esc(cid.slice(0,16))}</span>`);
+    // 注: onclick 参数必须传完整 cid, openContext 会用 _findMailByContext 反查 mail_id; 只在显示文本上 .slice(0,16) 做视觉截断.
+    if(r.name) pills.push(`<span class="crumb-pill">👤 ${esc(r.name.slice(0,18))}${r.is_new?' (新客)':''}</span>`);
+    if(g.ok && g.bbox){
+      const bb=g.bbox;
+      const dim=`${bb[0]!=null?Number(bb[0]).toFixed(0):'-'}×${bb[1]!=null?Number(bb[1]).toFixed(0):'-'}×${bb[2]!=null?Number(bb[2]).toFixed(0):'-'}`;
+      pills.push(`<span class="crumb-pill crumb-link" onclick="Mail.focusRegion('geometry')">📐 ${dim}mm · ${g.weight_kg??'-'}kg</span>`);
+    }
+    const vst=v.status||'UNKNOWN';
+    const vcls=vst==='PASS'?'ok':(vst==='HITL'?'warn':(vst==='BLOCKED'?'err':''));
+    pills.push(`<span class="crumb-pill crumb-link ${vcls}" onclick="Mail.focusRegion('verification')">🛡 DFM ${esc(vst)}</span>`);
+    if(vst==='HITL') pills.push(`<span class="crumb-pill warn crumb-link" onclick="Mail.focusHITL()">🛡 待审 ↗</span>`);
+    if(c.ok){
+      const u=c.unit_price ?? c.breakdown?.product_value ?? '-';
+      let total = c.final_price ?? c.total_price ?? c.landed_cost ?? null;
+      if(total==null && c.breakdown){
+        const b=c.breakdown;
+        total = (b.product_value||0)+(b.freight||0)+(b.duty||0)+(b.vat||0)+(b.insurance||0)+(b.origin_handling||0)+(b.dest_handling||0)+(b.inland_freight||0);
+      }
+      pills.push(`<span class="crumb-pill crumb-link" onclick="Mail.focusRegion('commercial')">💰 ¥${esc(u)} · 落地 ¥${esc(total??'-')}</span>`);
+    }
+    if(t.count>0) pills.push(`<span class="crumb-pill crumb-link" onclick="Mail.focusRegion('trace')">🔬 trace ${t.count}</span>`);
+    elc.innerHTML = pills.join('') || '<span class="crumb-pill">无上下文</span>';
+  }
+
+  function renderDetail(d){
+    const root=document.getElementById('mailDetail');
+    const atts = (d.attachments_detail||[]);
+    root.innerHTML='';
+    root.appendChild(el(`<div class="head">
+      <h2>${esc(d.subject||'(no subject)')}</h2>
+      <div class="from-line"><b>From:</b> ${esc(d.from||'?')} → <b>To:</b> ${esc(d.to||'?')}</div>
+      <div class="from-line">${fmtTime(d.received_at)} · ${d.size_bytes||0} bytes</div>
+      <div class="crumb" id="mailCrumb"><span class="crumb-pill">⏳ 聚合 8 区上下文…</span></div></div>`));
+    root.appendChild(el(`<div><div class="sub">📨 正文</div><div class="body-text">${esc(d.body||'(empty)')}</div></div>`));
+    if(atts.length){
+      const row=el('<div><div class="sub">📎 附件</div><div class="att-row"></div></div>');
+      atts.forEach(a=>{
+        const chip=el(`<span class="badge">${esc(a.name)} · ${a.kind}</span>`);
+        row.querySelector('.att-row').appendChild(chip);
+      });
+      root.appendChild(row);
+    }
+    // 草稿面板占位 (#37 会填充实际逻辑)
+    root.appendChild(el(`<div class="draft-panel">
+      <div class="sub">📝 AI 草稿 (v3.0.1)</div>
+      <textarea id="draftBody" placeholder="点 ▶ 生成草稿 (build_reply)" disabled></textarea>
+      <div class="draft-actions">
+        <button class="primary" disabled>▶ 生成草稿</button>
+        <button class="ghost" disabled>✓ 采纳</button>
+        <button class="ghost" disabled>✗ 丢弃</button>
+        <span class="lat">draft_only · 铁律①</span>
+      </div></div>`));
+  }
+
+  async function loadAllRegions(mailId){
+    const side=document.getElementById('mailSide');
+    side.innerHTML='';
+    // 8 个 region 并行拉 (trace 失败容忍)
+    const results=await Promise.allSettled(regions.map(r=>jget(`/v1/mail/${encodeURIComponent(mailId)}/context/${r}`)));
+    const regionsByName={};
+    regions.forEach((r,i)=>{
+      const res=results[i];
+      const data = res.status==='fulfilled' ? res.value : {error: res.reason?.message||'failed'};
+      regionsByName[r]=data;
+      side.appendChild(buildRegionCard(r, data));
+    });
+    // v3.0 #48: 若 verification=HITL, 拉 HITL 面板数据并注入 hitlSlot
+    const vIdx = regions.indexOf('verification');
+    if(vIdx>=0 && results[vIdx].status==='fulfilled' && results[vIdx].value && results[vIdx].value.status==='HITL'){
+      try{
+        const h = await jget(`/v1/mail/${encodeURIComponent(mailId)}/context/hitl`);
+        regionsByName.hitl=h;
+        const slot = side.querySelector('#hitlSlot');
+        if(slot) slot.outerHTML = renderHITLPanel(mailId, h);
+      }catch(e){ /* HITL 拉取失败不阻塞 */ }
+    }
+    // v3.0 #49: 渲染顶部面包屑
+    renderBreadcrumb(mailId, regionsByName);
+  }
+
+  function renderHITLPanel(mailId, h){
+    const draft = h.draft || {};
+    const locked = h.locked;
+    const canApprove = !!h.can_approve;
+    const cid = h.context_id || '-';
+    const quote = h.quote || {};
+    const unit = quote.unit_price ?? '-';
+    const total = quote.final_price ?? quote.total_price ?? '-';
+    const cur = quote.currency || 'CNY';
+    const sha = (h.quote_sha16||'').slice(0,12) || '-';
+    const shaLock = (h.quote_sha16_locked||'').slice(0,12) || '-';
+    const banner = !locked ? `<div class="hitl-banner show">⚠ <b>iron-rule-1 violation</b>: 报价被篡改, 锁定 hash ${shaLock} ≠ 当前 hash ${sha}, 已拒绝批准</div>` : '';
+    return `<div class="hitl-panel">
+      <div class="hitl-head">🛡 HITL 审批 · iron-rule-1 锁定</div>
+      <div class="hitl-draft">${esc(draft.body||'(无草稿)')}</div>
+      <div class="hitl-quote">
+        <span><b>${esc(cur)}</b> ${esc(unit)} × qty = <b>${esc(total)}</b></span>
+        <span class="lock">
+          <span class="lock-icon ${locked?'ok':'broken'}">${locked?'🔒':'🔓'}</span>
+          <code>${sha}</code>
+        </span>
+      </div>
+      ${banner}
+      <div class="hitl-actions">
+        <input class="reject-cmt" id="hitlCmt" placeholder="打回原因 (可选)">
+        <button class="reject" onclick="Mail.hitlAction('${esc(mailId)}','reject')" ${canApprove?'':'disabled'}>打回</button>
+        <button class="approve" onclick="Mail.hitlAction('${esc(mailId)}','approve')" ${canApprove?'':'disabled'}>✓ 批准</button>
+      </div>
+    </div>`;
+  }
+
+  async function hitlAction(mailId, action){
+    const cmt = (document.getElementById('hitlCmt')?.value || '').trim();
+    const cid = currentMailId===mailId ? currentMailId : mailId;
+    try{
+      const h = await jget(`/v1/mail/${encodeURIComponent(mailId)}/context/hitl`);
+      const ccid = h.context_id;
+      if(!ccid){ toast('context_id 缺失', false); return; }
+      const fd = new FormData();
+      fd.append('approver','human-ui');
+      if(cmt) fd.append('comment', cmt);
+      const r = await fetch(`/v1/rfq/${encodeURIComponent(ccid)}/approve`,{method:'POST',body:fd}).then(r=>r.json());
+      if(r.approved){
+        toast(`✓ ${action==='approve'?'批准':'打回'}成功 · state=${r.state}`);
+        loadAllRegions(mailId);
+      }else{
+        toast('批准失败: '+(r.detail||JSON.stringify(r)), false);
+      }
+    }catch(e){ toast('错误: '+(e.message||e), false); }
+  }
+
+  function buildRegionCard(name, data){
+    const label = regionLabels[name]||name;
+    let severity='info', html='', collapsed=false;
+    if(data && data.error){
+      severity='warn'; html=`<div class="empty">⚠ ${esc(data.error)}</div>`;
+    } else if(name==='customer'){
+      if(data.is_new){severity='info';html=`<div class="empty">新客户，建议建档</div>`}
+      else {
+        const h=data.history||{};
+        const sigs=(data.signals||[]).map(s=>`<li><b>${esc(s.type)}</b>: ${esc(s.detail||'')} <span class="badge">${esc(s.severity)}</span></li>`).join('')||'<li class="empty">无 signals</li>';
+        const quotes=(h.quotes||[]).slice(0,3).map(q=>{
+          const cid=q.context_id||'';
+          return cid
+            ? `<li class="crumb-link" onclick="Mail.openContext('${esc(cid)}')"><code>${esc(cid.slice(-12))}</code> ¥${q.unit_price??'-'} ${esc(q.verification_status||'')} ↗</li>`
+            : `<li>${esc(JSON.stringify(q).slice(0,80))}</li>`;
+        }).join('')||'<li class="empty">无报价</li>';
+        severity = sigs.includes('warning')?'warn':'ok';
+        html=`<ul>${sigs}</ul><div class="sub" style="margin-top:6px">最近报价 (点 ↗ 跳转)</div><ul>${quotes}</ul>`;
+      }
+    } else if(name==='geometry'){
+      if(!data.ok){severity='info';html=`<div class="empty">${esc(data.reason||'无 STEP')}</div>`}
+      else {
+        severity='ok';
+        const b=data.bbox||{};
+        html=`<div class="meta-grid">
+          <div class="meta-cell"><b>bbox mm</b>${(b[0]||0).toFixed?.[0]||'-'}×${(b[1]||0).toFixed?.[0]||'-'}×${(b[2]||0).toFixed?.[0]||'-'}</div>
+          <div class="meta-cell"><b>volume cm³</b>${data.volume_cm3??'-'}</div>
+          <div class="meta-cell"><b>weight kg</b>${data.weight_kg??'-'}</div>
+          <div class="meta-cell"><b>source</b>${esc(data.source||'?')}</div></div>
+          <span class="region-link" onclick="Mail.focusRegion('commercial')">→ 💰 商业区</span>`;
+      }
+    } else if(name==='rag'){
+      const hits=(data.hits||[]).map(h=>`<li>${esc(h.title||h.snippet||JSON.stringify(h))} ${data.mock?'<span class="badge">[MOCK]</span>':''}</li>`).join('')||'<li class="empty">无命中</li>';
+      severity=data.mock?'info':'ok';
+      html=`<ul>${hits}</ul>`;
+    } else if(name==='pending'){
+      const tasks=(data.tasks||[]).map(t=>`<li><code>${esc(t.context_id||'')}</code> ${esc(t.state||'')}</li>`).join('')||'<li class="empty">无未办</li>';
+      severity = data.count>0?'warn':'ok';
+      html=`<ul>${tasks}</ul>`;
+    } else if(name==='verification'){
+      if(data.status==='BLOCKED'){severity='crit';html=`<div class="empty">🛡 Timo 内核锁定，不可被 AI 覆盖</div><ul>${(data.conflicts||[]).slice(0,3).map(c=>`<li>${esc(c.message||JSON.stringify(c))}</li>`).join('')}</ul>`}
+      else if(data.status==='UNKNOWN'){severity='warn';html=`<div class="empty">${esc(data.note||'未跑门禁')}</div>`}
+      else if(data.status==='HITL'){
+        severity='warn';
+        html=`<div><b>status</b>: 🔔 ${esc(data.status)} · 需人工审批</div><ul>${(data.reasons||[]).slice(0,3).map(r=>`<li>${esc(r)}</li>`).join('')||'<li class="empty">无 reasons</li>'}</ul>
+        <span class="region-link warn" onclick="Mail.focusHITL()">📋 跳转审批面板</span>
+        <div id="hitlSlot"></div>`;
+      }
+      else {severity='ok';html=`<div><b>status</b>: ${esc(data.status)}</div><ul>${(data.reasons||[]).slice(0,3).map(r=>`<li>${esc(r)}</li>`).join('')||'<li class="empty">无 reasons</li>'}</ul><span class="region-link" onclick="Mail.focusRegion('trace')">🔬 查看 trace</span>`}
+    } else if(name==='postmortem'){
+      severity='info';
+      const devs=(data.past_cost_deviations||[]).map(p=>{
+        const cid=p.context_id||'';
+        return cid
+          ? `<li class="crumb-link" onclick="Mail.openContext('${esc(cid)}')"><code>${esc(cid.slice(-12))}</code> ¥${p.actual_cost??'-'} ${esc(p.outcome||'')} ↗</li>`
+          : `<li>无 context_id</li>`;
+      }).join('')||'<li class="empty">无历史成本</li>';
+      html=`<div class="meta-grid">
+        <div class="meta-cell"><b>won</b>${data.won_count||0}</div>
+        <div class="meta-cell"><b>lost</b>${data.lost_count||0}</div>
+        <div class="meta-cell"><b>total</b>${data.total||0}</div></div>
+        <div class="sub" style="margin-top:8px">📦 历史成本偏差 (点 ↗ 跳转)</div>
+        <ul>${devs}</ul>`;
+    } else if(name==='commercial'){
+      if(!data.ok){severity='warn';html=`<div class="empty">${esc(data.reason||data.error||'待补 Incoterms/目的地')}</div>`}
+      else {
+        severity='ok';
+        html=`<div class="meta-grid">
+          <div class="meta-cell"><b>unit_price</b>${data.unit_price??'-'}</div>
+          <div class="meta-cell"><b>total</b>${data.total_price??'-'}</div>
+          <div class="meta-cell"><b>margin %</b>${data.margin_pct??'-'}</div>
+          <div class="meta-cell"><b>landed</b>${data.landed_cost??'-'}</div></div>`;
+      }
+    } else if(name==='trace'){
+      const evs=(data.events||[]).slice(0,5).map(e=>`<li>${esc(e.event||e.ts||'')}</li>`).join('')||'<li class="empty">无 trace</li>';
+      collapsed=true;
+      html=`<ul>${evs}</ul>`;
+    }
+    const card=el(`<div class="region${severity==='crit'?' crit':severity==='warn'?' warn':''}" data-region="${name}">
+      <div class="rh"><span class="ico ${severity}"></span><span>${label}</span>
+        <span class="count">${collapsed?'收起':'1'}</span></div>
+      <div class="rb ${collapsed?'collapsed':''}">${html}</div></div>`);
+    card.querySelector('.rh').onclick=()=>{
+      const rb=card.querySelector('.rb');const c=card.querySelector('.count');
+      const open=rb.classList.toggle('collapsed');
+      c.textContent = open?'收起':'1';
+    };
+    return card;
+  }
+
+  async function loadScenario(scenario){
+    try{
+      const r=await jpost('/v1/demo/scenario/'+scenario);
+      if(r.context_id){ try{ localStorage.setItem('uea_last_cid', r.context_id); }catch(e){} }
+      toast(`✅ 装载 ${scenario}: ${r.mail_id||r.context_id||''} → ${r.state||''}`);
+      await refresh();
+      if(r.mail_id) openMail(r.mail_id);
+    }catch(e){toast('❌ demo 装载失败: '+e.message,false)}
+  }
+
+  function toggleUpload(){
+    const a=document.getElementById('mailUploadArea');
+    a.classList.toggle('hidden');
+    if(!a.classList.contains('hidden')) document.getElementById('mailFileInput').click();
+  }
+
+  async function handleUpload(files){
+    if(!files||!files.length)return;
+    for(const f of files){
+      try{
+        if(f.name.endsWith('.mbox')){
+          toast('⚠ .mbox 拆分器见 #35 step 3 (待实施)', false);
+          continue;
+        }
+        const r=await uploadFile(f);
+        toast(`✅ 已上传 ${f.name}: ${r.mail_id||''}`);
+      }catch(e){toast('❌ 上传失败: '+e.message,false)}
+    }
+    await refresh();
+  }
+
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]))}
+  function fmtTime(ts){if(!ts)return '-';const d=new Date(ts*1000);return d.toLocaleString('zh-CN',{hour12:false})}
+
+  return {refresh, openMail, openContext, loadScenario, toggleUpload, handleUpload, focusRegion, focusHITL, hitlAction};
+})();
+
+/* ===== v3.0 Gmail IMAP IIFE ===== */
+window.Gmail = (function(){
+  let _last = null;
+  async function refresh(){
+    try{
+      const r = await fetch('/v1/gmail/status').then(r=>r.json());
+      _last = r;
+      paint(r);
+    }catch(e){
+      document.getElementById('gmailState').textContent = '⚠ 状态拉取失败';
+      document.getElementById('gmailState').className = 'gmail-state err';
+    }
+  }
+  function paint(r){
+    const s = r.settings || {};
+    const st = document.getElementById('gmailState');
+    const ac = document.getElementById('gmailAccount');
+    const sync = document.getElementById('gmailSyncBtn');
+    const disc = document.getElementById('gmailDisconnectBtn');
+    const cred = (r.credentials || {}).services || [];
+    const hasCred = cred.length > 0;
+    const srv = (s.service||'gmail')+' · '+(s.host||'imap')+(s.port?':'+s.port:'')+' · '+(s.folder||'INBOX');
+    if(!s.enabled){
+      st.textContent = '⏸ 铁律①默认禁 · 显式开启'; st.className = 'gmail-state off';
+      ac.textContent = ''; sync.style.display='none'; disc.style.display='none';
+    }else if(hasCred){
+      st.textContent = '✓ Gmail 已连接'; st.className = 'gmail-state on';
+      ac.textContent = cred[0].account + ' · ' + (cred[0].masked||'') + ' · ' + srv;
+      sync.style.display=''; disc.style.display='';
+    }else{
+      st.textContent = '⚠ 已启用但无凭据'; st.className = 'gmail-state off';
+      ac.textContent = srv; sync.style.display='none'; disc.style.display='none';
+    }
+  }
+  function toggleForm(){
+    const f = document.getElementById('gmailForm');
+    f.classList.toggle('hidden');
+  }
+  async function connect(){
+    const email = document.getElementById('gmailEmail').value.trim();
+    const pwd = document.getElementById('gmailAppPwd').value.trim();
+    const enabled = document.getElementById('gmailEnabled').checked;
+    const out = document.getElementById('gmailConnResult');
+    if(!email || !pwd){ out.textContent='❌ 邮箱/App Password 必填'; out.style.color='var(--err)'; return; }
+    out.textContent='⏳ 连接中…'; out.style.color='var(--mut)';
+    try{
+      if(enabled){
+        await fetch('/v1/gmail/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:true})});
+      }
+      const r = await fetch('/v1/gmail/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email, app_password: pwd})}).then(r=>r.json());
+      if(r.ok){
+        out.textContent='✓ '+(r.account||'已连接')+' @ '+(r.host||''); out.style.color='var(--ok)';
+        document.getElementById('gmailAppPwd').value='';
+        document.getElementById('gmailForm').classList.add('hidden');
+      }else{
+        out.textContent='❌ '+(r.error||'失败'); out.style.color='var(--err)';
+      }
+      await refresh();
+    }catch(e){
+      out.textContent='❌ '+(e.message||e); out.style.color='var(--err)';
+    }
+  }
+  async function syncNow(){
+    const out = document.getElementById('gmailConnResult');
+    out.textContent='⏳ 拉信中…'; out.style.color='var(--mut)';
+    try{
+      const r = await fetch('/v1/gmail/sync',{method:'POST'}).then(r=>r.json());
+      if(r.ok){
+        out.textContent='✓ 拉信 '+r.fetched+'封 (skipped '+r.skipped+')'; out.style.color='var(--ok)';
+        if(window.Mail) Mail.refresh();
+      }else{
+        out.textContent='❌ '+(r.error||'失败'); out.style.color='var(--err)';
+      }
+    }catch(e){
+      out.textContent='❌ '+(e.message||e); out.style.color='var(--err)';
+    }
+  }
+  async function disconnect(){
+    if(!confirm('断开 Gmail 连接并清除本地凭据?')) return;
+    await fetch('/v1/gmail/disconnect',{method:'POST'});
+    document.getElementById('gmailConnResult').textContent='已断开';
+    await refresh();
+  }
+  document.getElementById('gmailForm')?.classList.add('hidden');
+  return {refresh, toggleForm, connect, syncNow, disconnect};
+})();
+
+/* ===== v3.0 V12 内核 IIFE ===== */
+window.V12 = (function(){
+  async function refresh(){
+    const out = document.getElementById('v12StatusBar');
+    if(!out) return;
+    document.getElementById('v12Ts').textContent = '加载中…';
+    try{
+      const [st, au] = await Promise.all([
+        fetch('/v1/v12/status').then(r=>r.json()),
+        fetch('/v1/v12/audit?limit=8').then(r=>r.json())
+      ]);
+      const led = document.getElementById('v12Led');
+      led.classList.toggle('on', !!st.kernel_online);
+      document.getElementById('v12Src').textContent = st.source_label || 'unknown';
+      document.getElementById('v12QuoteTotal').textContent = st.calc_quote_total || 0;
+      document.getElementById('v12QuoteP50').textContent = st.calc_quote_p50_ms || 0;
+      document.getElementById('v12QuoteP95').textContent = st.calc_quote_p95_ms || 0;
+      const total = Math.max(1, st.calc_quote_total || 1);
+      const maxBar = Math.min(100, Math.round((st.calc_quote_p95_ms || 0) / 10));
+      document.getElementById('v12QuoteBar').style.width = Math.max(4, Math.min(100, 100 - maxBar)) + '%';
+      document.getElementById('v12DfmTotal').textContent = st.dfm_conflicts_total || 0;
+      ['C1','C2','C3','C4','C5','C6'].forEach(b=>{
+        const v = (st.dfm_c1_c6_counts || {})[b] || 0;
+        const el = document.getElementById('v12'+b);
+        if(el){ el.textContent = v; const wrap = el.closest('.v12-bk'); if(wrap) wrap.classList.toggle('hot', v>0); }
+      });
+      document.getElementById('v12AuditCount').textContent = (au.hashes||[]).length;
+      const al = document.getElementById('v12AuditList');
+      al.innerHTML = (au.hashes||[]).map(h=>`<li><code>${h.sha256_16}</code><span>${esc((h.context_id||'').slice(0,12))}</span></li>`).join('') || '<li style="color:var(--mut)">暂无 hash</li>';
+      const tl = document.getElementById('v12TraceList');
+      tl.innerHTML = (st.recent_spans||[]).slice(0,8).map(s=>`<li class="${s.status==='ERROR'?'err':'ok'}"><b>${esc(s.trace_id)}</b><span>${esc(s.name)}</span><span style="margin-left:auto">${esc(s.duration_ms||'-')}ms</span></li>`).join('') || '<li style="color:var(--mut)">暂无 span</li>';
+      document.getElementById('v12TraceCount').textContent = st.trace_count || 0;
+      document.getElementById('v12SpanCount').textContent = st.span_count || 0;
+      document.getElementById('v12SourceLabel').textContent = st.source_label || '-';
+      document.getElementById('v12Ts').textContent = fmtTime(Date.now()/1000);
+    }catch(e){
+      document.getElementById('v12Ts').textContent = '错误: '+(e.message||e);
+    }
+  }
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]))}
+  function fmtTime(ts){if(!ts)return '-';const d=new Date(ts*1000);return d.toLocaleString('zh-CN',{hour12:false})}
+  document.getElementById('v12Refresh')?.addEventListener('click', refresh);
+  return {refresh};
+})();
+
+// ============================================================
+// T2 RFQ 管线 — /v1/rfq/* 8 生命周期端点 + /v1/traces 全接
+// ============================================================
+window.Rfq = (function(){
+  const $ = id => document.getElementById(id);
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&','<':'<','>':'>','"':'&quot;',"'":'&#39;'}[c]))}
+  function cid(){ return $('rfqCid').value.trim(); }
+  function show(o){ const p=$('rfqOut'); p.classList.remove('hidden');
+    p.textContent = typeof o==='string' ? o : JSON.stringify(o,null,2); }
+  function needCid(){ if(!cid()){ toast('请先填 context_id',false); return false; } return true; }
+  function enter(){ const l=localStorage.getItem('uea_last_cid');
+    if(l && !$('rfqCid').value) $('rfqCid').value=l; }
+  async function load(){
+    if(!needCid()) return;
+    try{
+      const d = await jfetch('/v1/rfq/'+encodeURIComponent(cid()));
+      const q = d.quote||{};
+      const stCls = d.state==='DONE' ? 'on' : (d.state==='BLOCKED'||d.state==='FAILED') ? 'err' : '';
+      $('rfqStateBar').innerHTML =
+        `<span class="badge ${stCls}">${esc(d.state)}</span>`+
+        `<span class="badge ${d.verification_status==='PASS'?'on':'err'}">verify: ${esc(d.verification_status)}</span>`+
+        `<span class="lat">unit ${q.unit_price??'-'} · final ${q.final_price??'-'} · margin ${d.margin_pct??'-'}% · engine ${esc(d.engine_source||'-')} · audit ${d.audit_valid==null?'—':(d.audit_valid?'✓':'✗')}</span>`;
+      show(d); toast('已装载 '+cid());
+    }catch(e){
+      $('rfqStateBar').innerHTML = '<span class="badge err">未找到</span><span class="lat">'+esc(String(e.message).slice(0,120))+'</span>';
+      show('装载失败: '+e.message+'\n提示: context 存于服务器内存 (_STORE), 重启即清空。先在 Demo 标签跑黄金链, 或邮件台装载 S1-S5/M1 场景。');
+    }
+  }
+  function useLast(){ const l=localStorage.getItem('uea_last_cid');
+    if(!l) return toast('无最近 intake 记录 (先在 Demo 标签跑黄金链)',false);
+    $('rfqCid').value=l; load(); }
+  async function step(s){
+    if(!needCid()) return;
+    try{ const d = await jfetch(`/v1/rfq/${encodeURIComponent(cid())}/${s}`,{method:'POST'}); show(d); toast('✓ '+s); }
+    catch(e){ show('❌ '+s+': '+e.message); toast(s+' 失败',false); }
+  }
+  async function approve(){
+    if(!needCid()) return;
+    const fd=new FormData();
+    fd.append('approver', $('rfqApprover').value.trim()||'human');
+    if($('rfqComment').value.trim()) fd.append('comment', $('rfqComment').value.trim());
+    try{ const d = await jfetch(`/v1/rfq/${encodeURIComponent(cid())}/approve`,{method:'POST',body:fd});
+      show(d); toast('✓ approved → '+d.state); }
+    catch(e){ show('❌ approve: '+e.message); toast('approve 失败 (BLOCKED 不可强放, 409)',false); }
+  }
+  async function postmortem(){
+    if(!needCid()) return;
+    const fd=new FormData();
+    fd.append('outcome', $('rfqOutcome').value);
+    if($('rfqActualCost').value) fd.append('actual_cost', $('rfqActualCost').value);
+    if($('rfqLeadDays').value) fd.append('actual_leadtime_days', $('rfqLeadDays').value);
+    if($('rfqPmNote').value.trim()) fd.append('note', $('rfqPmNote').value.trim());
+    try{ const d = await jfetch(`/v1/rfq/${encodeURIComponent(cid())}/postmortem`,{method:'POST',body:fd});
+      show(d); toast('✓ postmortem 已记录 (闭环)'); }
+    catch(e){ show('❌ postmortem: '+e.message); toast('postmortem 失败',false); }
+  }
+  async function trace(){
+    if(!needCid()) return;
+    try{ show(await jfetch('/v1/traces/'+encodeURIComponent(cid()))); }
+    catch(e){ show('❌ traces: '+e.message); }
+  }
+  return {enter,load,useLast,step,approve,postmortem,trace};
+})();
+
+// ============================================================
+// T3 飞轮 — /v1/flywheel/* 5 端点全接 (方案 D 知识回流可见化)
+// ============================================================
+window.Flywheel = (function(){
+  const $ = id => document.getElementById(id);
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&','<':'<','>':'>','"':'&quot;',"'":'&#39;'}[c]))}
+  function show(id,o){ const p=$(id); p.classList.remove('hidden');
+    p.textContent = typeof o==='string' ? o : JSON.stringify(o,null,2); }
+  async function refresh(){
+    try{
+      const [st,cs] = await Promise.all([jfetch('/v1/flywheel/stats'), jfetch('/v1/flywheel/customers')]);
+      $('fwStats').innerHTML = [
+        ['客户沙箱', st.total_customers], ['累计报价', st.total_quotes],
+        ['Won', st.total_won], ['Lost', st.total_lost],
+        ['总胜率', (st.overall_win_rate*100).toFixed(1)+'%'],
+      ].map(([k,v])=>`<div class="card"><h3>${k}</h3><div class="v12-value">${v}</div></div>`).join('');
+      const rows = (cs.customers||[]).map(c=>`<tr>
+          <td><code>${esc(c.customer_id)}</code></td>
+          <td>${c.quote_count??'-'}</td>
+          <td>${c.win_rate!=null?(c.win_rate*100).toFixed(0)+'%':'-'}</td>
+          <td>${esc(c.error||'')}</td>
+          <td><button class="mini" onclick="Flywheel.detail('${esc(c.customer_id)}')">画像</button></td></tr>`).join('');
+      $('fwCustomers').innerHTML = cs.count
+        ? `<table style="width:100%;font-size:12px;border-collapse:collapse">
+             <tr style="color:var(--mut);text-align:left"><th>customer_id</th><th>报价数</th><th>胜率</th><th></th><th></th></tr>${rows}</table>`
+        : '<span class="lat">暂无客户沙箱 — 跑黄金链 + crm-sync, 或在下方手动记录报价</span>';
+      $('fwMeta').textContent = `${cs.count} 客户 · ${st.total_quotes} 报价 · win_rate ${st.overall_win_rate}`;
+    }catch(e){ toast('❌ flywheel: '+e.message,false); $('fwMeta').textContent='错误: '+e.message; }
+  }
+  async function detail(c){
+    c = c || $('fwCid').value.trim();
+    if(!c) return toast('请先填 customer_id',false);
+    $('fwCid').value = c;
+    try{ show('fwDetail', await jfetch('/v1/flywheel/customers/'+encodeURIComponent(c))); }
+    catch(e){ show('fwDetail','❌ '+e.message); }
+  }
+  function recIds(){
+    const cust=$('fwRecCust').value.trim(), ctx=$('fwRecCtx').value.trim();
+    if(!cust||!ctx){ toast('需要 customer_id + context_id',false); return null; }
+    return {cust,ctx};
+  }
+  async function recQuote(){
+    const r=recIds(); if(!r) return;
+    const price=parseFloat($('fwRecPrice').value);
+    try{ const d = await jpost(`/v1/flywheel/customers/${encodeURIComponent(r.cust)}/quote`,
+        {rfq:{context_id:r.ctx}, quote:isNaN(price)?{}:{unit_price:price}});
+      show('fwOut',d); toast('✓ 报价已入沙箱'); refresh(); }
+    catch(e){ show('fwOut','❌ '+e.message); toast('记录报价失败',false); }
+  }
+  async function recOutcome(){
+    const r=recIds(); if(!r) return;
+    const cost=parseFloat($('fwRecCost').value);
+    try{ const d = await jpost(`/v1/flywheel/customers/${encodeURIComponent(r.cust)}/outcome`,
+        {context_id:r.ctx, outcome:$('fwRecOutcome').value,
+         actual_cost:isNaN(cost)?null:cost, note:''});
+      show('fwOut',d); toast('✓ 结果已记录 (定价模型已更新)'); refresh(); }
+    catch(e){ show('fwOut','❌ '+e.message); toast('记录结果失败',false); }
+  }
+  return {refresh,detail,recQuote,recOutcome};
+})();
+
+// ============================================================
+// T4 运维诊断 — 14 个 ops 端点全接 (只读自动拉, 副作用手动触发)
+// ============================================================
+window.Ops = (function(){
+  const CARDS = [
+    {id:'puller',  t:'📬 邮件链路 puller',        get:'/v1/mail/puller/status'},
+    {id:'cfgst',   t:'⚙️ 热载配置状态',            get:'/v1/config/status'},
+    {id:'cfgre',   t:'⚙️ 配置热重载 (副作用)',      post:'/v1/config/reload'},
+    {id:'spark',   t:'✨ Spark 仪表板状态',         get:'/v1/spark/dashboard'},
+    {id:'sparkr',  t:'✨ Spark dashboard 重建',    post:'/v1/spark/refresh'},
+    {id:'cache',   t:'🗃 AgentCache 统计',         get:'/v1/cache/stats'},
+    {id:'cachei',  t:'🗃 缓存全量失效 (副作用)',     post:'/v1/cache/invalidate'},
+    {id:'nim',     t:'☁️ NIM 探活',                get:'/v1/nim/health'},
+    {id:'nimi',    t:'☁️ NIM 缓存失效 (副作用)',     post:'/v1/nim/invalidate'},
+    {id:'router',  t:'🧭 model-router 路由',       get:'/v1/model-router/status'},
+    {id:'spec',    t:'📜 agent-spec 部署契约',      get:'/v1/agent-spec'},
+    {id:'skills',  t:'🧩 skills 注册表+交叉校验',    get:'/v1/skills'},
+    {id:'dfm',     t:'🏭 V12 DFM 规则',            get:'/v1/v12/dfm'},
+  ];
+  function build(){
+    const g=document.getElementById('opsGrid');
+    if(!g || g.dataset.built) return;
+    g.dataset.built='1';
+    g.innerHTML = CARDS.map(c=>`<div class="card">
+      <h3>${c.t}</h3>
+      <div class="row"><button class="mini" onclick="Ops.run('${c.id}')">${c.post?'▶ 执行':'↻ 拉取'}</button>
+        <span class="lat" id="ops-ts-${c.id}"></span></div>
+      <pre id="ops-${c.id}" class="hidden" style="max-height:240px;overflow:auto;font-size:11px;white-space:pre-wrap;margin-top:8px"></pre>
+    </div>`).join('');
+  }
+  async function run(id){
+    const c=CARDS.find(x=>x.id===id); if(!c) return;
+    build();
+    const p=document.getElementById('ops-'+id);
+    p.classList.remove('hidden'); p.textContent='加载中…';
+    try{
+      const d = await jfetch(c.get||c.post, {method:c.post?'POST':'GET'});
+      p.textContent = JSON.stringify(d,null,2);
+      document.getElementById('ops-ts-'+id).textContent = new Date().toLocaleTimeString('zh-CN',{hour12:false});
+    }catch(e){ p.textContent='❌ '+e.message; }
+  }
+  function refreshAll(){ build(); CARDS.filter(c=>c.get).forEach(c=>run(c.id)); }
+  async function guard(){
+    const text=document.getElementById('opsGuardText').value;
+    if(!text.trim()) return toast('请输入待检文本',false);
+    const fd=new FormData();
+    fd.append('text',text);
+    fd.append('stage',document.getElementById('opsGuardStage').value);
+    const p=document.getElementById('opsGuardOut'); p.classList.remove('hidden'); p.textContent='检查中…';
+    try{ const d = await jfetch('/v1/guardrails/check',{method:'POST',body:fd});
+      p.textContent = JSON.stringify(d,null,2); }
+    catch(e){ p.textContent='❌ '+e.message; }
+  }
+  return {run,refreshAll,guard};
+})();
+
+// ============================================================
+// v4.0.0 Workbench — 三栏智能体协作台 (mock 驱动，可直接看效果)
+// ============================================================
+window.Workbench = (function(){
+  // ---- 1. Mock 数据：3 封邮件，覆盖 PASS / HITL / BLOCKED 三种场景 ----
+  const MAILS = [
+    {
+      mail_id: "demo_s1_001",
+      from: "Alice Chen <alice@northwind-robotics.com>",
+      to: "sales@union-mfg.com",
+      subject: "RFQ — 50 pcs 6061 aluminum motor brackets",
+      received_at: Date.now()/1000 - 3600,
+      body: "Hi,\n\nPlease quote 50 pcs of 6061 aluminum motor brackets, 100×50×10mm, anodizing finish, tolerance IT7. Destination: US, by air, DDP.\n\nNeed best price for our Q4 production.\n\nBest,\nAlice",
+      attachments: ["bracket.step", "drawing.pdf"],
+      customer: { name: "Alice Chen", company: "Northwind Robotics", customer_id: "CUST-A1B2C3", is_new: false, signals: [
+        { type: "repeat_customer", severity: "info", detail: "历史 3 次合作" },
+        { type: "historical_margin", severity: "info", detail: "历史平均毛利 24.5%" }
+      ]},
+      geometry: { ok: true, bbox: [100, 50, 10], volume_cm3: 5.0, weight_kg: 0.0135, source: "live:7862", features: { holes: 4, fillets: 8 } },
+      rag_hits: [
+        { case_id: "KB-6061-ANOD", title: "6061 阳极氧化典型工艺：Type II 硬质 25μm，良率 96%", score: 0.92, mock: true },
+        { case_id: "KB-IT7-AERO", title: "IT7 公差航空件案例：建议升级 IT6 + ¥8/件", score: 0.78, mock: true }
+      ],
+      pending: [],
+      verification: { status: "PASS", reasons: ["毛利 23.1% > policy floor 15%", "公差 IT7 正常"], conflicts: [], risk_score: 0.18 },
+      postmortem: { won_count: 2, lost_count: 1, total: 3 },
+      commercial: { ok: true, unit_price: 222.8, final_price: 9413.3, margin_pct: 23.1, currency: "CNY", landed_cost: 10980.5, freight: 800, duty: 536.56, incoterm: "DDP", lead_days: 15 },
+      hitl: null
+    },
+    {
+      mail_id: "demo_s2_002",
+      from: "Bob Smith <bob@acme-precision.de>",
+      to: "sales@union-mfg.com",
+      subject: "URGENT RFQ — TC4 titanium aerospace bracket (IT5)",
+      received_at: Date.now()/1000 - 1800,
+      body: "Dear team,\n\nNeed urgent quote for 10 pcs of TC4 titanium aerospace bracket, 80×60×15mm, IT5 tolerance (precision required), bead blast finish. EU destination by air.\n\nThis is for a critical aerospace program. Please prioritize.\n\nBest,\nBob",
+      attachments: ["titanium_bracket.step"],
+      customer: { name: "Bob Smith", company: "Acme Precision GmbH", customer_id: "CUST-D4E5F6", is_new: false, signals: [
+        { type: "repeat_customer", severity: "info", detail: "历史 5 次合作，全部 won" },
+        { type: "high_value", severity: "warning", detail: "客单价 > ¥30000 阈值" }
+      ]},
+      geometry: { ok: true, bbox: [80, 60, 15], volume_cm3: 7.2, weight_kg: 0.0324, source: "live:7862", features: { holes: 6, fillets: 12, thin_walls: 1 } },
+      rag_hits: [
+        { case_id: "KB-TC4-IT5", title: "TC4 + IT5：必走 HITL 审批；建议双工位装夹；平均良率 78%", score: 0.95, mock: true }
+      ],
+      pending: [{ context_id: "RFQ-20260919-EXIST01", state: "DRAFTING" }],
+      verification: { status: "HITL", reasons: ["公差 IT5 触发精密件 HITL (policy.hitl.tolerance.grade=IT5)", "金额门禁 ¥41798 > ¥30000 需商务确认", "材料 TC4 进口料周期风险"], conflicts: [{ code: "IT5_PRECISION", message: "IT5 公差需双工位装夹，节拍 ×1.8" }], risk_score: 0.72 },
+      postmortem: { won_count: 5, lost_count: 0, total: 5 },
+      commercial: { ok: true, unit_price: 3384.5, final_price: 41798.6, margin_pct: 19.0, currency: "CNY", landed_cost: 45200, freight: 2800, duty: 0, incoterm: "DAP", lead_days: 22 },
+      hitl: { draft: { subject: "Re: URGENT RFQ — TC4 titanium aerospace bracket (IT5)", body: "Dear Bob,\n\nThank you for the urgent inquiry. Please find our preliminary quote below for the TC4 titanium aerospace bracket (10 pcs, IT5, bead blast):\n\n• Unit price: ¥3,384.50\n• Total: ¥41,798.60 (DAP Munich)\n• Lead time: 22 working days\n• Payment: T/T 30/70\n\nGiven the IT5 tolerance requirement, we strongly recommend a DFM review call to validate fixture strategy before release. Our engineering team can host a 30-min session this Thursday.\n\nPlease confirm and we'll proceed with PO.\n\nBest regards,\nUnion Manufacturing Team" }, quote: { unit_price: 3384.5, final_price: 41798.6, currency: "CNY" }, quote_sha16: "ab12cd34ef567890", quote_sha16_locked: "ab12cd34ef567890", locked: true, can_approve: true, verification_status: "HITL", reasons: ["公差 IT5 触发精密件 HITL", "金额门禁 ¥41798 > ¥30000"] }
+    },
+    {
+      mail_id: "demo_s3_003",
+      from: "Carol Wang <carol@delta-asia.cn>",
+      to: "sales@union-mfg.com",
+      subject: "RFQ — 100 pcs 304 stainless steel valve body (anodizing)",
+      received_at: Date.now()/1000 - 7200,
+      body: "Hi,\n\nNeed quote for 100 pcs of 304 stainless steel valve body, 60×40×20mm, surface: anodizing (red color), IT8 tolerance. SEA destination by sea.\n\nNote: 304 stainless normally does not anodize — please confirm feasibility.\n\nThanks,\nCarol",
+      attachments: [],
+      customer: { name: "Carol Wang", company: "Delta Asia Ltd", customer_id: "CUST-G7H8I9", is_new: false, signals: [
+        { type: "repeat_customer", severity: "info", detail: "历史 2 次合作" }
+      ]},
+      geometry: { ok: false, reason: "no STEP attachment" },
+      rag_hits: [
+        { case_id: "KB-304-ANOD", title: "304 不锈钢不能阳极氧化 → 推荐钝化或喷涂 → 必走 BLOCKED", score: 0.99, mock: true }
+      ],
+      pending: [],
+      verification: { status: "BLOCKED", reasons: ["304 不锈钢不可阳极氧化（铁基材料阳极氧化仅适用 Al/Mg/Ti）", "建议替换表面处理：钝化 (passivation) 或粉末喷涂"], conflicts: [{ code: "MATERIAL_SURFACE_MISMATCH", message: "304 + anodizing 工艺冲突" }], risk_score: 0.95 },
+      postmortem: { won_count: 0, lost_count: 1, total: 1 },
+      commercial: null,
+      hitl: null
+    },
+    {
+      mail_id: "demo_s6_004",
+      from: "采购 · 徐工集团 · Mr. Wang",
+      to: "sales@union-mfg.com",
+      subject: "RFQ #A11 — DIN 2527 盲板法兰 1200 件 · 交期 26-10-15",
+      received_at: Date.now()/1000 - 7200,
+      body: "Dear Supplier,\n\n徐工集团采购部，随附图纸 DIN2527-2023 盲板法兰：\n\n1. 材质：S355JR（请按碳钢报价）\n2. 尺寸：DN100 PN16，OD 172 × t 18\n3. 数量：1200 pcs，年框架\n4. 表面：发黑\n5. 交期：2026-10-15（FOB 上海）\n\n请 24h 内回复最优价与 DFM 意见。",
+      attachments: ["DIN2527-2023_A11.step"],
+      customer: { name: "Mr. Wang", company: "徐工集团", customer_id: "CUST-XCMG01", is_new: false, signals: [
+        { type: "high_value", severity: "warning", detail: "年采购额 ¥4.2M · 1200 件" }
+      ]},
+      geometry: { ok: true, bbox: [172, 172, 18], volume_cm3: 405.6, weight_kg: 3.18, source: "live:7862", features: { holes: 8, fillets: 16 } },
+      rag_hits: [{ case_id: "KB-CARBON-BLACK", title: "碳钢发黑典型工艺: 发黑+油封 防锈", score: 0.9, mock: true }],
+      pending: [],
+      verification: { status: "PASS", reasons: ["毛利 24.0% > 15%", "材质匹配"], conflicts: [], risk_score: 0.15 },
+      postmortem: { won_count: 8, lost_count: 1, total: 9 },
+      commercial: { ok: true, unit_price: 95.5, final_price: 114600, margin_pct: 24.0, currency: "CNY", landed_cost: 125000, freight: 6000, duty: 0, incoterm: "FOB", lead_days: 25 },
+      hitl: null
+    },
+    {
+      mail_id: "demo_s7_005",
+      from: "甲方转包 · 三一重工",
+      to: "sales@union-mfg.com",
+      subject: "量产 M37 — 阀块超声清洗后表面白斑 · 需 HITL",
+      received_at: Date.now()/1000 - 86400,
+      body: "白斑问题第三次复现。客户索赔窗口今天 18:00 关闭，需决策：A) 返工喷砂；B) 折价接收。附件：金相图 + 显微照片。请输出建议与风险评分。",
+      attachments: ["m37_metallography.jpg", "m37_micrograph.png"],
+      customer: { name: "Sany Team", company: "三一重工", customer_id: "CUST-SANY01", is_new: false, signals: [
+        { type: "quality_issue", severity: "warning", detail: "返工历史 2 批" }
+      ]},
+      geometry: { ok: true, bbox: [60, 40, 20], volume_cm3: 48.0, weight_kg: 0.38, source: "live:7862", features: { holes: 4, fillets: 4 } },
+      rag_hits: [{ case_id: "KB-WHITESPOT", title: "M37 阀块白斑 postmortem: 折价接收比返工更经济 (-¥12000)", score: 0.88, mock: true }],
+      pending: [],
+      verification: { status: "HITL", reasons: ["质量事件 3 次复现", "客户索赔 18:00 关闭", "金额 ¥28000"], conflicts: [{ code: "QUALITY_REDO", message: "白斑 3 次, 返工 vs 折价" }], risk_score: 0.65 },
+      postmortem: { won_count: 5, lost_count: 1, total: 6 },
+      commercial: { ok: true, unit_price: 280.0, final_price: 28000, margin_pct: 18.0, currency: "CNY", landed_cost: 32000, freight: 2500, duty: 1500, incoterm: "DDP", lead_days: 7 },
+      hitl: {
+        draft: { subject: "Re: M37 阀块白斑 — HITL 决策", body: "Dear Sany Team,\n\n收到白斑 3 次复现报告。\n\n基于 postmortem 历史与成本分析:\n- 决策 A (返工喷砂): +¥12000 + 7 天延期\n- 决策 B (折价 5%): -¥1400 即时交付\n\n建议执行 B (折价接收), 索赔金额 ¥28000 × 95% = ¥26600 收回, 净损失仅 ¥1400。\n\n如确认, 请回 PO 调整价款。\n\nBest,\nUnion Manufacturing" },
+        quote: { unit_price: 280, final_price: 28000, currency: "CNY" },
+        quote_sha16: "deadbeef12345678", quote_sha16_locked: "deadbeef12345678",
+        locked: true, can_approve: true, verification_status: "HITL",
+        reasons: ["质量事件 3 次", "索赔窗口 18:00"]
+      }
+    },
+    {
+      mail_id: "demo_s8_006",
+      from: "新询盘 · 中联重科",
+      to: "sales@union-mfg.com",
+      subject: "RFQ #B04 — 泵车支腿销轴 840 件 · 45# 调质",
+      received_at: Date.now()/1000 - 90000,
+      body: "外径 85 h7，长 480，调质 HRC24-28，发黑。供应商大修过线时间紧迫，报价越快越好。",
+      attachments: [],
+      customer: { name: "Zoomlion Buyer", company: "中联重科", customer_id: "CUST-ZOOM01", is_new: true, signals: [
+        { type: "new_customer", severity: "info", detail: "新客户 · 无历史" }
+      ]},
+      geometry: { ok: true, bbox: [85, 85, 480], volume_cm3: 2723.4, weight_kg: 21.4, source: "live:7862", features: { holes: 0, fillets: 2 } },
+      rag_hits: [],
+      pending: [],
+      verification: { status: "PASS", reasons: ["新客但量大"], conflicts: [], risk_score: 0.25 },
+      postmortem: { won_count: 0, lost_count: 0, total: 0 },
+      commercial: { ok: true, unit_price: 145.0, final_price: 121800, margin_pct: 18.0, currency: "CNY", landed_cost: 135000, freight: 8500, duty: 4700, incoterm: "CIF", lead_days: 18 },
+      hitl: null
+    },
+    {
+      mail_id: "demo_s9_007",
+      from: "老客户 · 卡特彼勒（中国）",
+      to: "sales@union-mfg.com",
+      subject: "PO 跟进 #P88 — 上批 45# 轴套提前付款",
+      received_at: Date.now()/1000 - 100000,
+      body: "订单 P88-99 已确认，财务通知本周五提前付款。感谢配合。",
+      attachments: [],
+      customer: { name: "Caterpillar Buyer", company: "卡特彼勒（中国）", customer_id: "CUST-CAT01", is_new: false, signals: [
+        { type: "vip_customer", severity: "info", detail: "年采购额 ¥8.1M · 准时率 100%" }
+      ]},
+      geometry: null,
+      rag_hits: [],
+      pending: [],
+      verification: { status: "PASS", reasons: ["PO 确认, 提前付款, 无风险"], conflicts: [], risk_score: 0.05 },
+      postmortem: { won_count: 24, lost_count: 0, total: 24 },
+      commercial: null,
+      hitl: null
+    },
+    {
+      mail_id: "demo_s10_008",
+      from: "外协 · 华中精工",
+      to: "sales@union-mfg.com",
+      subject: "后处理异常 — 阳极氧化色差 ΔE=3.8 · BLOCKED",
+      received_at: Date.now()/1000 - 110000,
+      body: "内六角块 600pcs 氧化色差超标，需要您决策：换膜系（AZ31 磨砂）还是分色出货。",
+      attachments: [],
+      customer: { name: "华中外协", company: "华中精工", customer_id: "CUST-HUAZHONG01", is_new: false, signals: [
+        { type: "quality_issue", severity: "warning", detail: "质量事件 1" }
+      ]},
+      geometry: { ok: true, bbox: [30, 30, 50], volume_cm3: 45.0, weight_kg: 0.12, source: "live:7862", features: { holes: 1, fillets: 12 } },
+      rag_hits: [],
+      pending: [],
+      verification: { status: "BLOCKED", reasons: ["色差 ΔE=3.8 超 2.5 阈值", "600pcs 待决策"], conflicts: [{ code: "ANODIZING_COLOR_DRIFT", message: "色差超标" }], risk_score: 0.55 },
+      postmortem: { won_count: 3, lost_count: 1, total: 4 },
+      commercial: { ok: true, unit_price: 8.5, final_price: 5100, margin_pct: 22.0, currency: "CNY", landed_cost: 5800, freight: 400, duty: 0, incoterm: "EXW", lead_days: 5 },
+      hitl: null
+    },
+    {
+      mail_id: "demo_s11_009",
+      from: "供应商 · 广东远航 CNC",
+      to: "sales@union-mfg.com",
+      subject: "产能确认 — #A11 法兰 1200 件可承接",
+      received_at: Date.now()/1000 - 120000,
+      body: "三轴 + 四轴卧加均可，打样周期 3 天，量产 15 天。价格就按框架协议浮动 5%。",
+      attachments: [],
+      customer: { name: "远航 CNC", company: "广东远航 CNC", customer_id: "CUST-YH01", is_new: false, signals: [
+        { type: "framework_supplier", severity: "info", detail: "框架供应商 · 产能 15d" }
+      ]},
+      geometry: null,
+      rag_hits: [],
+      pending: [],
+      verification: { status: "PASS", reasons: ["框架供应商, 产能匹配"], conflicts: [], risk_score: 0.05 },
+      postmortem: { won_count: 0, lost_count: 0, total: 0 },
+      commercial: null,
+      hitl: null
+    },
+    {
+      mail_id: "demo_s12_010",
+      from: "新客户 · 特变电工",
+      to: "sales@union-mfg.com",
+      subject: "RFQ #C12 — 变压器散热器安装板 4 尺寸组",
+      received_at: Date.now()/1000 - 130000,
+      body: "4 组尺寸共 2400 件，6061-T6 阳极氧化银白。返修率要求 < 0.5%。",
+      attachments: ["radiator_panel.step"],
+      customer: { name: "TBEA Buyer", company: "特变电工", customer_id: "CUST-TBEA01", is_new: true, signals: [
+        { type: "new_customer", severity: "info", detail: "新客户 · 铜价联动条款" }
+      ]},
+      geometry: { ok: true, bbox: [200, 100, 5], volume_cm3: 100.0, weight_kg: 0.27, source: "live:7862", features: { holes: 12, fillets: 24 } },
+      rag_hits: [],
+      pending: [],
+      verification: { status: "PASS", reasons: ["返修率 < 0.5% 严格, 但毛利 21% 合格"], conflicts: [], risk_score: 0.22 },
+      postmortem: { won_count: 0, lost_count: 0, total: 0 },
+      commercial: { ok: true, unit_price: 35.0, final_price: 84000, margin_pct: 21.0, currency: "CNY", landed_cost: 92000, freight: 4500, duty: 3500, incoterm: "DDP", lead_days: 20 },
+      hitl: null
+    }
+  ];
+
+  const SKILLS = [
+    { id: "parse_rfq",       iron: "det", enabled: true, label: "解析 RFQ" },
+    { id: "extract_specs",   iron: "llm", enabled: true, label: "补抽规格" },
+    { id: "check_dfm",       iron: "det", enabled: true, label: "DFM 冲突" },
+    { id: "calc_quote",      iron: "det", enabled: true, label: "确定性报价 🔒" },
+    { id: "freight_customs", iron: "det", enabled: true, label: "运费关税" },
+    { id: "verify_gate",     iron: "det", enabled: true, label: "门禁裁决" },
+    { id: "write_reply",     iron: "draft", enabled: true, label: "起草回复" },
+    { id: "render_thumbnail",iron: "det", enabled: true, label: "STEP 缩略图" },
+    { id: "supplier_match",  iron: "none", enabled: true, label: "供应商匹配" },
+    { id: "submit_feedback", iron: "det", enabled: true, label: "提交反馈" },
+    { id: "golden_chain",    iron: "det", enabled: true, label: "黄金链" },
+    { id: "chat_understand", iron: "llm", enabled: true, label: "意图理解" },
+    { id: "rag_recall",      iron: "none", enabled: true, label: "RAG 召回" },
+    { id: "context_lookup",  iron: "none", enabled: true, label: "上下文聚合" },
+    { id: "skill_dispatch",  iron: "none", enabled: true, label: "编排调度" },
+    { id: "cite_evidence",   iron: "none", enabled: true, label: "引用证据" },
+    { id: "suggest_reply",   iron: "draft", enabled: true, label: "草稿建议" },
+    { id: "hitl_explain",    iron: "none", enabled: true, label: "HITL 解释" }
+  ];
+
+  const POLICIES = [
+    { key: "iron-rule-1",   label: "铁律① 确定性锁定", state: "locked", desc: "LLM 不可改写报价（不可关）" },
+    { key: "hitl-required", label: "HITL 必走",       state: "on",      desc: "金额 / 风险 / DFM / 验收 → 人工审批" },
+    { key: "local-only",    label: "数据不出车间",    state: "on",      desc: "文件路径沙箱" },
+    { key: "skill-allowlist", label: "Skill 白名单",  state: "on",      desc: "Skill 必须在 allowlist 内" }
+  ];
+
+  // ---- 2. State ----
+  const state = {
+    session_id: "wb-" + Math.random().toString(36).slice(2, 10),
+    bound_mail_id: null,
+    bound_context_id: null,
+    messages: [],
+    inspectTab: "mail",
+    audit: [],
+    pending: false
+  };
+
+  // ---- 3. 工具函数 ----
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s||"").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmtTime = (ts) => { if (!ts) return "-"; const d = new Date(ts*1000); return d.toLocaleString("zh-CN", { hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }); };
+
+  // ---- 4. 渲染 Inbox ----
+  function renderInbox(){
+    const list = $("wbInboxList");
+    const q = ($("wbSearch").value || "").toLowerCase();
+    const f = $("wbFilter").value;
+    const filtered = MAILS.filter(m => {
+      if (q && !(m.from.toLowerCase().includes(q) || m.subject.toLowerCase().includes(q))) return false;
+      if (f !== "all" && m.verification.status !== f) return false;
+      return true;
+    });
+    $("wbInboxCount").textContent = filtered.length + " 封";
+    if (!filtered.length) {
+      list.innerHTML = `<div class="wb-empty"><div class="icon">📭</div>没有匹配的邮件<div class="hint">清空搜索或切换状态筛选</div></div>`;
+      return;
+    }
+    list.innerHTML = filtered.map(m => {
+      const sel = m.mail_id === state.bound_mail_id ? "sel" : "";
+      const v = m.verification.status;
+      const vBadge = v === "HITL" ? `<span style="background:rgba(245,158,11,.18);color:var(--warn);padding:1px 5px;border-radius:3px;font-size:9px">🛡 HITL</span>`
+                  : v === "BLOCKED" ? `<span style="background:rgba(239,68,68,.18);color:var(--err);padding:1px 5px;border-radius:3px;font-size:9px">🚫 BLK</span>`
+                  : v === "PASS" ? `<span style="background:rgba(34,197,94,.18);color:var(--ok);padding:1px 5px;border-radius:3px;font-size:9px">✓ PASS</span>` : "";
+      const lock = m.commercial && m.commercial.ok ? `<span style="font-size:10px" title="sha16 已锁">🔒</span>` : "";
+      return `<div class="wb-mail-item ${sel}" onclick="Workbench.openMail('${m.mail_id}')">
+        <div class="from">${esc(m.from.split("<")[0].trim())}</div>
+        <div class="subj">${esc(m.subject)}</div>
+        <div class="meta">${vBadge}${lock}<span class="ts">${fmtTime(m.received_at)}</span></div>
+      </div>`;
+    }).join("");
+  }
+
+  function filterInbox(){ renderInbox(); }
+
+  // ---- 黄金链 8 步进度条 ----
+  const GC_STEPS = [
+    { k: "INTAKE" }, { k: "PARSE" }, { k: "DFM" }, { k: "QUOTE" },
+    { k: "VERIFY" }, { k: "REPLY" }, { k: "APPROVE" }, { k: "DONE" }
+  ];
+  function renderGoldenChain() {
+    const box = $("wbGoldenChain");
+    if (!box) return;
+    if (!state.bound_mail_id) {
+      box.innerHTML = '<span style="font-size:10px;color:var(--mut);padding:4px">选一封邮件看黄金链进度</span>';
+      return;
+    }
+    const m = MAILS.find(x => x.mail_id === state.bound_mail_id);
+    if (!m) { box.innerHTML = ""; return; }
+    const v = m.verification.status;
+    // 步骤完成度: PASS→1-7 done / 8 done; HITL→done to verify; BLOCKED→stop at 4
+    const progress = (() => {
+      if (v === "BLOCKED") return { done: 3, active: 4, flag: 4 };
+      if (v === "HITL") return { done: 5, active: 6, locked: 6 };
+      if (v === "PASS") return { done: 7, active: -1, locked: 7 };
+      return { done: 1, active: 2 };
+    })();
+    const dots = GC_STEPS.map((s, i) => {
+      let cls = "wb-gc-step";
+      if (i < progress.done) cls += " done";
+      else if (i === progress.active) cls += " active";
+      else if (i === progress.flag) cls += " flag";
+      else if (i === progress.locked) cls += " locked";
+      const dot = i < progress.done ? "✓" : (i === progress.flag ? "!" : (i === progress.locked ? "🔒" : (i + 1)));
+      return `<span class="${cls}"><span class="dot">${dot}</span><span>${s.k}</span></span>`;
+    }).join('<span class="wb-gc-arrow">→</span>');
+    box.innerHTML = dots;
+  }
+
+  // ---- 3D 几何预览 (three.min.js 真 WebGL, 失败 fallback SVG) ----
+  function renderGeo3D(m) {
+    if (!m || !m.geometry || !m.geometry.ok) return '<div style="font-size:11px;color:var(--mut);margin-top:10px">无 STEP 几何数据</div>';
+    const b = m.geometry.bbox;
+    const vb = b ? `100×${b[1]}×${b[2]} mm` : "";
+    // 容器 id 唯一 (多次 mount 避免冲突)
+    const cid = "wb3d_" + Math.random().toString(36).slice(2, 8);
+    if (THREE_OK) {
+      // 异步 init three.js 场景
+      setTimeout(() => initThreeDScene(cid, m), 30);
+      return `<div class="wb-3d-preview" role="img" aria-label="3D 几何预览 ${vb}">
+        <span class="wb-3d-label" style="top:8px;left:10px">🧊 3D WebGL · ${esc(vb)}</span>
+        <div id="${cid}" style="width:100%;height:100%"></div>
+        <span class="wb-3d-label" style="top:90px;left:36px">${esc(b[0])}×${esc(b[1])}</span>
+        <span class="wb-3d-label" style="bottom:10px;left:10px">体积 ${m.geometry.volume_cm3} cm³ · 质量 ${m.geometry.weight_kg} kg · ${(m.geometry.features && m.geometry.features.holes) || 0}× 孔</span>
+      </div>`;
+    }
+    // fallback SVG (CDN 失败)
+    return `<div class="wb-3d-preview" role="img" aria-label="3D 几何预览 ${vb} (SVG fallback)">
+      <span class="wb-3d-label" style="top:8px;left:10px">🧊 3D 预览 (SVG fallback) · ${esc(vb)}</span>
+      <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet">
+        <defs><linearGradient id="g3d" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#2A3B50"/><stop offset="1" stop-color="#0F1720"/>
+        </linearGradient></defs>
+        <g><ellipse cx="160" cy="90" rx="100" ry="55" fill="url(#g3d)" stroke="#76B900" stroke-width="1.4"/>
+          <circle cx="160" cy="90" r="14" fill="none" stroke="#76B900" stroke-width="1.4"/>
+          <circle cx="160" cy="90" r="4" fill="#76B900"/></g>
+      </svg>
+    </div>`;
+  }
+
+  function initThreeDScene(cid, m) {
+    if (!THREE_OK || typeof THREE === "undefined") return;
+    const container = document.getElementById(cid);
+    if (!container || container.__three_inited) return;
+    container.__three_inited = true;
+    try {
+      const W = container.clientWidth, H = container.clientHeight;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 1000);
+      camera.position.set(80, 80, 80);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(W, H);
+      renderer.setPixelRatio(window.devicePixelRatio || 1);
+      container.innerHTML = "";
+      container.appendChild(renderer.domElement);
+      // 灯光
+      const amb = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(amb);
+      const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+      dir.position.set(50, 100, 50);
+      scene.add(dir);
+      // 根据 bbox 创建 BoxGeometry
+      const b = m.geometry.bbox || [50, 50, 50];
+      const sx = Math.max(b[0] / 50, 0.1), sy = Math.max(b[1] / 50, 0.1), sz = Math.max(b[2] / 50, 0.1);
+      const geo = new THREE.BoxGeometry(40 * sx, 40 * sy, 40 * sz);
+      const mat = new THREE.MeshPhongMaterial({
+        color: 0x76B900, emissive: 0x0a2a00, shininess: 80, transparent: true, opacity: 0.85,
+        wireframe: false
+      });
+      const cube = new THREE.Mesh(geo, mat);
+      scene.add(cube);
+      // Edges (项目绿色 wireframe)
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(geo),
+        new THREE.LineBasicMaterial({ color: 0x76B900 })
+      );
+      cube.add(edges);
+      // Grid 地面
+      const grid = new THREE.GridHelper(80, 10, 0x76B900, 0x26323E);
+      grid.position.y = -20;
+      scene.add(grid);
+      // 旋转动画
+      let t = 0;
+      function animate() {
+        if (!container.isConnected) return;
+        t += 0.01;
+        cube.rotation.y = t;
+        cube.rotation.x = Math.sin(t * 0.5) * 0.15;
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+      animate();
+      // 容器卸载时清理
+      const obs = new MutationObserver(() => {
+        if (!document.body.contains(container)) {
+          renderer.dispose();
+          geo.dispose();
+          mat.dispose();
+          obs.disconnect();
+        }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    } catch (e) {
+      console.warn("[3D] init failed", e);
+      container.innerHTML = '<div style="color:var(--mut);font-size:11px;padding:10px">3D init failed (fallback to SVG)</div>';
+    }
+  }
+
+  // ---- Ctrl+K 命令面板 ----
+  const COMMANDS = [
+    { l: "🛡 跑门禁 verify_gate", k: "G", run: () => send() && mockCmd("verify") },
+    { l: "💰 算报价 calc_quote", k: "Q", run: () => send() && mockCmd("quote") },
+    { l: "✅ 批准（双确认）approve_gate", k: "A", run: () => send() && mockCmd("approve") },
+    { l: "🔍 查 DFM 冲突", k: "D", run: () => send() && mockCmd("dfm") },
+    { l: "📚 查客户历史 RAG", k: "R", run: () => send() && mockCmd("history") },
+    { l: "📝 起草回复", k: "W", run: () => send() && mockCmd("draft") },
+    { l: "🔗 跑黄金链 golden_chain", k: "C", run: () => send() && mockCmd("golden") },
+    { l: "📜 看最近审计", k: "L", run: () => send() && mockCmd("audit") },
+    { l: "🔧 打开 Skill Console", k: "S", run: () => toggleSkillConsole() },
+    { l: "🧊 3D 几何预览", k: "3", run: () => switchInspectTab("approval") },
+    { l: "📧 切换邮件列表", k: "M", run: () => renderInbox() },
+    { l: "🧹 清空对话", k: "X", run: () => reset() },
+  ];
+  function mockCmd(kind) {
+    // 在 Chat 输入预设文本, 让 mock agent 回复
+    const presets = {
+      "verify": "跑一下门禁",
+      "quote": "算报价",
+      "approve": "批准这个报价",
+      "dfm": "查 DFM 冲突",
+      "history": "客户历史",
+      "draft": "起草回复",
+      "golden": "跑黄金链",
+      "audit": "看审计",
+    };
+    const text = presets[kind] || kind;
+    $("wbChatText").value = text;
+    send();
+  }
+  function openPalette() { $("wbPalette").classList.add("show"); renderPalette(""); setTimeout(() => $("wbPalInput").focus(), 30); }
+  function closePalette() { $("wbPalette").classList.remove("show"); }
+  function renderPalette(kw) {
+    const box = $("wbPalList"); box.innerHTML = "";
+    COMMANDS.forEach((c, i) => {
+      if (kw && (c.l + c.k).toLowerCase().indexOf(kw.toLowerCase()) < 0) return;
+      const it = el("div", "wb-pal-item" + (i === 0 ? " sel" : ""));
+      it.innerHTML = '<span class="pl">' + esc(c.l) + '</span><span class="pk">' + esc(c.k) + '</span>';
+      it.onclick = () => { closePalette(); c.run(); };
+      box.appendChild(it);
+    });
+  }
+  document.addEventListener("keydown", (e) => {
+    // Ctrl+K 开关
+    if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      e.preventDefault();
+      const pal = $("wbPalette");
+      if (pal.classList.contains("show")) closePalette(); else openPalette();
+      return;
+    }
+    if (e.key === "Escape" && $("wbPalette").classList.contains("show")) {
+      closePalette(); return;
+    }
+    // 命令面板内: ↑↓ 选择, Enter 执行, 输入过滤
+    if ($("wbPalette").classList.contains("show")) {
+      const items = Array.from($("wbPalList").children);
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const idx = items.findIndex(x => x.classList.contains("sel"));
+        const ni = (idx + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+        items.forEach((x, j) => x.classList.toggle("sel", j === ni));
+      } else if (e.key === "Enter") {
+        const sel = $("wbPalList .sel");
+        if (sel) { closePalette(); sel.click(); }
+      } else if (e.key.length === 1) {
+        // 简单过滤 (输入字符 → 重渲染)
+        setTimeout(() => renderPalette($("wbPalInput").value), 0);
+      }
+    }
+  });
+  $("wbPalInput")?.addEventListener("input", (e) => renderPalette(e.target.value));
+
+  // ---- 5. 打开邮件 ----
+  function openMail(mailId){
+    state.bound_mail_id = mailId;
+    const m = MAILS.find(x => x.mail_id === mailId);
+    if (!m) return;
+    state.bound_context_id = "CTX-" + mailId.slice(-8).toUpperCase();
+    renderInbox();
+    renderInspect();
+    renderBindPill();
+    pushMsg("sys", `📧 已加载 mail_id=${esc(mailId.slice(0,20))} · context_id=${esc(state.bound_context_id)} · status=${m.verification.status}`);
+    addAudit({ dispatch_id: "load_" + Date.now().toString(36), ts: Date.now()/1000, skills: ["context_lookup"], hitl_required: m.verification.status === "HITL", violations: 0, strategy: "auto" });
+  }
+
+  // ---- 6. 渲染 Bind Pill ----
+  function renderBindPill(){
+    const pill = $("wbBindPill");
+    if (state.bound_mail_id) {
+      const m = MAILS.find(x => x.mail_id === state.bound_mail_id);
+      pill.classList.remove("unbound");
+      pill.textContent = `📧 ${esc(m.from.split("<")[0].trim())} · ${state.bound_context_id}`;
+    } else {
+      pill.classList.add("unbound");
+      pill.textContent = "📧 未绑定邮件";
+    }
+    $("wbInspSub").textContent = state.bound_mail_id ? `${MAILS.find(x=>x.mail_id===state.bound_mail_id).from.split("<")[0].trim()}` : "—";
+  }
+
+  // ---- 7. Inspector ----
+  function switchInspectTab(tab){
+    state.inspectTab = tab;
+    document.querySelectorAll(".wb-tab").forEach(t => t.classList.toggle("active", t.dataset.itab === tab));
+    renderInspect();
+  }
+
+  function renderInspect(){
+    const body = $("wbInspectBody");
+    if (!state.bound_mail_id) {
+      body.innerHTML = `<div class="wb-empty"><div class="icon">👈</div>选择一封邮件<div class="hint">点开任意邮件，8 区上下文 + 草稿 + 审批会自动加载</div></div>`;
+      return;
+    }
+    const m = MAILS.find(x => x.mail_id === state.bound_mail_id);
+    if (state.inspectTab === "mail") body.innerHTML = renderMailTab(m);
+    else if (state.inspectTab === "draft") body.innerHTML = renderDraftTab(m);
+    else if (state.inspectTab === "approval") body.innerHTML = renderApprovalTab(m);
+    else if (state.inspectTab === "regions") body.innerHTML = renderRegionsTab(m);
+    renderGoldenChain();
+  }
+
+  function renderMailTab(m){
+    return `
+      <div class="wb-mail-head">
+        <h2>${esc(m.subject)}</h2>
+        <div class="from-line"><b>From:</b> ${esc(m.from)}</div>
+        <div class="from-line"><b>To:</b> ${esc(m.to)} · ${fmtTime(m.received_at)}</div>
+        <div class="crumb">
+          <span class="wb-crumb-pill acc">📧 ${esc(m.mail_id.slice(0,16))}</span>
+          <span class="wb-crumb-pill">🔍 ${esc(state.bound_context_id)}</span>
+          <span class="wb-crumb-pill ok">👤 ${esc(m.customer.name)}${m.customer.is_new ? ' (新客)' : ''}</span>
+          ${m.geometry.ok ? `<span class="wb-crumb-pill">📐 ${m.geometry.bbox[0]}×${m.geometry.bbox[1]}×${m.geometry.bbox[2]}mm · ${m.geometry.weight_kg}kg</span>` : '<span class="wb-crumb-pill">📐 无 STEP</span>'}
+          <span class="wb-crumb-pill ${m.verification.status === 'PASS' ? 'ok' : m.verification.status === 'HITL' ? 'warn' : 'err'}" onclick="Workbench.switchInspectTab('approval')">🛡 DFM ${esc(m.verification.status)}</span>
+          ${m.commercial && m.commercial.ok ? `<span class="wb-crumb-pill">💰 ¥${m.commercial.unit_price} · 落地 ¥${m.commercial.landed_cost}</span>` : ''}
+        </div>
+      </div>
+      <div class="wb-mail-body">${esc(m.body)}</div>
+      ${m.attachments.length ? `<div class="wb-mail-attachments">${m.attachments.map(a => `<span class="wb-att-chip">📎 ${esc(a)}</span>`).join("")}</div>` : ""}
+    `;
+  }
+
+  function renderDraftTab(m){
+    const draft = (m.hitl && m.hitl.draft) || { subject: "Re: " + m.subject, body: "(无草稿 — 点 Chat 发送 '📝 起草' 生成，或点 Chat 的 write_reply skill)" };
+    return `
+      <div class="wb-draft-status">
+        <span class="lock">📝</span>
+        <span class="ltext"><b>draft_only</b> · 铁律① · 必须人工发送</span>
+        <span style="font-size:16px">🔒</span>
+      </div>
+      <div class="wb-draft-subj">${esc(draft.subject)}</div>
+      <div class="wb-draft-body">${esc(draft.body)}</div>
+      <div class="wb-draft-actions">
+        <button class="primary" onclick="Workbench.notify('✓ 草稿已采纳 — 仅入库，不发送 (铁律③)')">✓ 采纳</button>
+        <button onclick="Workbench.notify('↻ 正在用 LLM 润色…', true)">↻ 重生成</button>
+        <button onclick="Workbench.notify('✎ 进入编辑模式')">✎ 编辑</button>
+        <button onclick="Workbench.notify('✗ 草稿已丢弃')">✗ 丢弃</button>
+        <button style="margin-left:auto;background:rgba(239,68,68,.1);color:var(--err);border-color:rgba(239,68,68,.3)" disabled>📧 自动发送</button>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:var(--mut);padding:8px;background:var(--card);border-radius:6px">
+        💡 Chat 输入 "📝 起草一份回复" 会触发 <code>parse_rfq → write_reply</code> 流水线，生成的草稿出现在这里。
+      </div>
+    `;
+  }
+
+  function renderApprovalTab(m){
+    const v = m.verification;
+    if (v.status === "BLOCKED") {
+      return `
+        <div class="wb-hitl-banner">🚫 BLOCKED · Timo 内核锁定 · 不可人工放行</div>
+        <div class="wb-region-card"><h4>🛡 门禁 <span class="b-err">BLOCKED</span></h4>
+          <ul>${v.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+          <div class="meta-grid"><div class="meta-cell"><b>conflicts</b>${v.conflicts.length} 条</div><div class="meta-cell"><b>risk_score</b>${v.risk_score}</div></div>
+        </div>
+        <div class="wb-region-card"><h4>📚 RAG 建议</h4>
+          <ul>${m.rag_hits.map(h => `<li>${esc(h.case_id)} · ${esc(h.title)}</li>`).join("")}</ul>
+        </div>
+      `;
+    }
+    if (!m.hitl) {
+      return `
+        <div class="wb-region-card"><h4>🛡 门禁 <span class="b-ok">${esc(v.status)}</span></h4>
+          <ul>${v.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+          <div class="meta-grid"><div class="meta-cell"><b>risk_score</b>${v.risk_score}</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--mut);text-align:center;padding:20px">✅ 门禁通过，无需人工审批</div>
+      `;
+    }
+    const h = m.hitl;
+    const draft = h.draft;
+    const banner = !h.locked ? `<div class="wb-hitl-banner">⚠ iron-rule-1 violation · 锁定 hash ${esc((h.quote_sha16_locked||"").slice(0,12))} ≠ 当前 hash ${esc((h.quote_sha16||"").slice(0,12))} · 已拒绝批准</div>` : "";
+    return `
+      ${banner}
+      <div class="wb-draft-status">
+        <span class="lock">🛡</span>
+        <span class="ltext"><b>HITL 审批</b> · status=${esc(v.status)} · risk=${v.risk_score}</span>
+        <span style="font-size:16px">${h.locked ? '🔒' : '🔓'}</span>
+      </div>
+      <div class="wb-region-card"><h4>📝 草稿预览</h4>
+        <div style="font-size:11px;color:var(--mut);margin-bottom:4px"><b>${esc(draft.subject)}</b></div>
+        <div style="font-size:11px;color:var(--tx);max-height:120px;overflow:auto;padding:6px;background:var(--bg);border-radius:4px">${esc(draft.body)}</div>
+      </div>
+      <div class="wb-region-card"><h4>💰 报价 (sha16 锁定)</h4>
+        <div class="meta-grid">
+          <div class="meta-cell"><b>unit_price</b>${esc(h.quote.currency)} ${h.quote.unit_price}</div>
+          <div class="meta-cell"><b>final_price</b>${h.quote.final_price}</div>
+          <div class="meta-cell"><b>sha16</b><code style="font-size:10px">${esc(h.quote_sha16.slice(0,12))}</code></div>
+          <div class="meta-cell"><b>locked</b>${h.locked ? '✅ 一致' : '❌ 不一致'}</div>
+        </div>
+      </div>
+      <div class="wb-region-card"><h4>🔍 HITL 触发原因</h4>
+        <ul>${v.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+        ${v.conflicts.length ? `<div style="margin-top:6px"><b>冲突:</b><ul>${v.conflicts.map(c => `<li>${esc(c.code)}: ${esc(c.message)}</li>`).join("")}</ul></div>` : ''}
+      </div>
+      <div class="wb-hitl-actions">
+        <input id="wbHitlCmt" placeholder="打回原因 (可选)">
+        <button class="reject" onclick="Workbench.approve('reject')">打回</button>
+        <button class="approve" ${h.can_approve ? '' : 'disabled style="opacity:.4;cursor:not-allowed"'} onclick="Workbench.approve('approve')">✓ 批准</button>
+      </div>
+      ${renderGeo3D(m)}
+    `;
+  }
+
+  function renderRegionsTab(m){
+    return `
+      <div class="wb-region-card"><h4>👤 客户 <span class="b-${m.customer.is_new ? 'info' : 'ok'}">${m.customer.is_new ? '新客' : '老客'}</span></h4>
+        <ul>${m.customer.signals.map(s => `<li><b>${esc(s.type)}</b>: ${esc(s.detail)}</li>`).join("")}</ul>
+        <div style="font-size:11px;color:var(--mut);margin-top:4px">客户ID: <code>${esc(m.customer.customer_id)}</code></div>
+      </div>
+      <div class="wb-region-card"><h4>📐 图纸</h4>
+        ${m.geometry.ok ? `<div class="meta-grid">
+          <div class="meta-cell"><b>bbox</b>${m.geometry.bbox.join('×')} mm</div>
+          <div class="meta-cell"><b>volume</b>${m.geometry.volume_cm3} cm³</div>
+          <div class="meta-cell"><b>weight</b>${m.geometry.weight_kg} kg</div>
+          <div class="meta-cell"><b>source</b>${esc(m.geometry.source)}</div>
+        </div>` : `<div style="color:var(--mut);font-size:11px">${esc(m.geometry.reason || 'no STEP')}</div>`}
+      </div>
+      <div class="wb-region-card"><h4>🔍 RAG ${m.rag_hits.some(h=>h.mock)?'<span class="b-warn" style="font-size:9px">MOCK</span>':''}</h4>
+        <ul>${m.rag_hits.map(h => `<li><code>${esc(h.case_id)}</code> · ${esc(h.title)} <span style="color:var(--mut)">score=${h.score}</span></li>`).join("")}</ul>
+      </div>
+      <div class="wb-region-card"><h4>📋 未办</h4>
+        ${m.pending.length ? `<ul>${m.pending.map(p => `<li><code>${esc(p.context_id)}</code> · ${esc(p.state)}</li>`).join("")}</ul>` : `<div style="color:var(--mut);font-size:11px">无未办 RFQ</div>`}
+      </div>
+      <div class="wb-region-card"><h4>🛡 门禁 <span class="b-${m.verification.status==='PASS'?'ok':m.verification.status==='HITL'?'warn':'err'}">${esc(m.verification.status)}</span></h4>
+        <ul>${m.verification.reasons.slice(0,3).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+      </div>
+      <div class="wb-region-card"><h4>📊 复盘</h4>
+        <div class="meta-grid"><div class="meta-cell"><b>won</b>${m.postmortem.won_count}</div><div class="meta-cell"><b>lost</b>${m.postmortem.lost_count}</div></div>
+      </div>
+      <div class="wb-region-card"><h4>💰 落地成本</h4>
+        ${m.commercial && m.commercial.ok ? `<div class="meta-grid">
+          <div class="meta-cell"><b>unit</b>¥${m.commercial.unit_price}</div>
+          <div class="meta-cell"><b>total</b>¥${m.commercial.final_price}</div>
+          <div class="meta-cell"><b>margin</b>${m.commercial.margin_pct}%</div>
+          <div class="meta-cell"><b>landed</b>¥${m.commercial.landed_cost}</div>
+        </div>` : '<div style="color:var(--mut);font-size:11px">未跑商业层</div>'}
+      </div>
+    `;
+  }
+
+  // ---- 8. Chat ----
+  function pushMsg(role, text, extra){
+    const m = { role, text, ts: Date.now()/1000, ...(extra||{}) };
+    state.messages.push(m);
+    renderChat();
+    return m;
+  }
+
+  function renderCites(text){
+    return esc(text).replace(/\[\[cite:([^|]+)\|([^\]]+)\]\]/g, (_, k, key) => {
+      const mock = key.includes("MOCK") ? "mock" : "";
+      return `<a class="wb-cite-chip ${mock}" onclick="Workbench.jumpCite('${esc(k)}','${esc(key)}')">📎 ${esc(key)}</a>`;
+    });
+  }
+
+  function renderChat(){
+    const thread = $("wbChatThread");
+    thread.innerHTML = state.messages.map(m => {
+      if (m.role === "sys") return `<div class="wb-msg sys">${esc(m.text)}<span class="ts">${fmtTime(m.ts)}</span></div>`;
+      if (m.role === "user") return `<div class="wb-msg user">${esc(m.text)}<span class="ts">${fmtTime(m.ts)} · You</span></div>`;
+      // agent
+      let badges = "";
+      if (m.skills && m.skills.length) {
+        badges = `<div class="wb-badge-strip">${m.skills.map(s => {
+          const cls = s.state === "locked" ? "locked" : s.state === "violation" ? "violation" : s.state === "skipped" ? "skipped" : "ok";
+          const icon = s.state === "locked" ? '<span class="iron">🔒</span>' : s.state === "violation" ? "⚠" : s.state === "skipped" ? "⏭" : "✓";
+          return `<span class="wb-badge ${cls}" title="${esc(s.detail || '')}">${icon} ${esc(s.id)}</span>`;
+        }).join("")}</div>`;
+      }
+      let traceBtn = "";
+      if (m.trace) {
+        const traceId = "tr_" + Math.random().toString(36).slice(2,8);
+        traceBtn = `<span class="wb-trace-toggle" onclick="document.getElementById('${traceId}').classList.toggle('show')">🔬 trace (${(m.trace.executed_skills || []).length} skills, ${m.trace.latency_ms || 0}ms)</span>
+          <div class="wb-trace-block" id="${traceId}">${esc(JSON.stringify(m.trace, null, 2))}</div>`;
+      }
+      return `<div class="wb-msg agent">
+        <span class="label">🤖 Agent</span>${renderCites(m.text)}
+        ${badges}
+        ${traceBtn}
+        <span class="ts">${fmtTime(m.ts)} · dispatch=${esc((m.trace && m.trace.dispatch_id) || "—")}</span>
+      </div>`;
+    }).join("");
+    thread.scrollTop = thread.scrollHeight;
+  }
+
+  // ---- 9. 发送 + 模拟 Agent 响应 (v5.1.0 加实时进度 + AgentCache) ----
+  function showProgress(skillName) {
+    const bar = $("wbProgressBar");
+    const status = $("wbProgressStatus");
+    if (bar) bar.classList.add("show");
+    if (status) {
+      status.textContent = "⏳ " + (skillName || "分析中") + " · 查 AgentCache...";
+      status.classList.add("show");
+    }
+  }
+  function hideProgress() {
+    const bar = $("wbProgressBar");
+    const status = $("wbProgressStatus");
+    if (bar) bar.classList.remove("show");
+    if (status) status.classList.remove("show");
+  }
+  function toggleModelsPanel() {
+    const p = $("wbModelsPanel");
+    if (p) p.classList.toggle("open");
+  }
+  async function send(){
+    if (state.pending) return;
+    const ta = $("wbChatText");
+    const text = ta.value.trim();
+    if (!text) return;
+    ta.value = "";
+    pushMsg("user", text);
+    state.pending = true;
+    renderChat();
+    showProgress("mock-agent");
+    setTimeout(() => {
+      hideProgress();
+      mockAgentReply(text);
+    }, 600);
+  }
+
+  function preset(text){
+    $("wbChatText").value = text;
+    send();
+  }
+
+  function mockAgentReply(userText){
+    const t = userText.toLowerCase();
+    let skills, replyText, trace;
+    if (t.includes("解析") || t.includes("rfq") || t.includes("parse")) {
+      skills = [
+        { id: "chat_understand", state: "ok", detail: "intent=parse_rfq" },
+        { id: "parse_rfq", state: "ok", detail: "extracted material/quantity/surface" }
+      ];
+      replyText = "已抽取 RFQ：material=<b>6061</b>, quantity=<b>50</b>, surface=<b>anodizing</b>, tolerance=<b>IT7</b>。\n\n详见 [[cite:customer|cid=" + esc(state.bound_context_id || "—") + "]] 与 [[cite:rag|case_id=KB-6061-ANOD]]。";
+      trace = { dispatch_id: "disp_" + Math.random().toString(36).slice(2,8), executed_skills: ["chat_understand", "parse_rfq"], strategy: "rules_only", latency_ms: 240, hits: ["rfq_kb"] };
+    } else if (t.includes("报价") || t.includes("price") || t.includes("算")) {
+      skills = [
+        { id: "chat_understand", state: "ok", detail: "intent=calc_quote" },
+        { id: "calc_quote", state: "locked", detail: "Timo v12 确定性内核 (iron-rule-1)" },
+        { id: "freight_customs", state: "ok", detail: "landed_cost computed" }
+      ];
+      const c = (state.bound_mail_id && MAILS.find(x=>x.mail_id===state.bound_mail_id).commercial);
+      const lock = c && c.ok ? `unit_price=🔒 ¥${c.unit_price}, landed=🔒 ¥${c.landed_cost}` : "未跑";
+      replyText = "已调用 calc_quote（确定性内核，不可改写）：<br>" + lock + "<br><br>详见 [[cite:rag|case_id=KB-IT7-AERO]]。";
+      trace = { dispatch_id: "disp_" + Math.random().toString(36).slice(2,8), executed_skills: ["chat_understand", "calc_quote", "freight_customs"], strategy: "auto", latency_ms: 380, output_sha256: "ab12cd34ef567890" };
+    } else if (t.includes("门禁") || t.includes("verify") || t.includes("dfm") || t.includes("冲突")) {
+      skills = [
+        { id: "chat_understand", state: "ok", detail: "intent=verify_gate" },
+        { id: "check_dfm", state: "ok", detail: "ConflictChecker (Timo)" },
+        { id: "verify_gate", state: "ok", detail: "辟牟援推止" }
+      ];
+      const v = state.bound_mail_id && MAILS.find(x=>x.mail_id===state.bound_mail_id).verification;
+      replyText = `门禁裁决：<b>${esc(v.status)}</b><br>原因：${v.reasons.slice(0,2).map(r=>esc(r)).join("；")}<br>风险分：${v.risk_score}<br><br>详见 [[cite:rag|case_id=" + (v.status==='BLOCKED'?'KB-304-ANOD':'KB-TC4-IT5') + "]]。`;
+      trace = { dispatch_id: "disp_" + Math.random().toString(36).slice(2,8), executed_skills: ["chat_understand", "check_dfm", "verify_gate"], strategy: "auto", latency_ms: 520 };
+    } else if (t.includes("历史") || t.includes("客户") || t.includes("rag") || t.includes("召回")) {
+      skills = [
+        { id: "rag_recall", state: "ok", detail: "crm + rag + postmortem" }
+      ];
+      const m = state.bound_mail_id && MAILS.find(x=>x.mail_id===state.bound_mail_id);
+      replyText = `客户 ${esc(m.customer.name)} 历史：<br>• 合作 ${m.postmortem.total} 次 (won ${m.postmortem.won_count} / lost ${m.postmortem.lost_count})<br>• 平均毛利见 signals<br>• 历史案例：${m.rag_hits.map(h=>'<code>'+esc(h.case_id)+'</code>').join(', ')}<br><br>详见 [[cite:customer|cid=" + esc(m.customer.customer_id) + "]] 与 [[cite:rag|case_id=KB-6061-ANOD]]。`;
+      trace = { dispatch_id: "disp_" + Math.random().toString(36).slice(2,8), executed_skills: ["chat_understand", "rag_recall"], strategy: "auto", latency_ms: 180 };
+    } else if (t.includes("起草") || t.includes("回复") || t.includes("write") || t.includes("draft")) {
+      skills = [
+        { id: "write_reply", state: "ok", detail: "draft_only · auto_send=false" },
+        { id: "cite_evidence", state: "ok", detail: "cite injected" }
+      ];
+      replyText = `已生成草稿（draft_only · 不会自动发送）：<br><br><i>"Dear ${esc((MAILS.find(x=>x.mail_id===state.bound_mail_id)||{from:"customer"}).from.split("<")[0].trim())}, thank you for your inquiry..."</i><br><br>请到 <b>中栏 → 📝 草稿</b> 查看完整内容并采纳/编辑。详见 [[cite:customer|cid=" + esc(state.bound_context_id||"—") + "]]。`;
+      trace = { dispatch_id: "disp_" + Math.random().toString(36).slice(2,8), executed_skills: ["chat_understand", "parse_rfq", "write_reply", "cite_evidence"], strategy: "auto", latency_ms: 920, output_sha256: "draft_sha16_locked" };
+      switchInspectTab("draft");
+    } else if (t.includes("批准") || t.includes("approve") || t.includes("✅")) {
+      const m = state.bound_mail_id && MAILS.find(x=>x.mail_id===state.bound_mail_id);
+      if (m && m.verification.status === "HITL" && m.hitl && m.hitl.can_approve) {
+        skills = [
+          { id: "approve_gate", state: "ok", detail: "HITL 双确认通过 · iron-rule-1 🔒" }
+        ];
+        replyText = `✅ 已批准 · state=DONE · sha16=🔒 <code>${esc(m.hitl.quote_sha16.slice(0,12))}</code><br><br>审计已落到 data/skill_audit.jsonl。详见 [[cite:customer|cid=" + esc(state.bound_context_id||"—") + "]]。`;
+        trace = { dispatch_id: "disp_" + Math.random().toString(36).slice(2,8), executed_skills: ["approve_gate"], strategy: "explicit", latency_ms: 110 };
+        switchInspectTab("approval");
+      } else if (m && m.verification.status === "BLOCKED") {
+        skills = [
+          { id: "approve_gate", state: "violation", detail: "BLOCKED 状态不可人工放行 (铁律②)" }
+        ];
+        replyText = `🚫 <b>拒绝批准</b>：当前 context 为 BLOCKED 状态，Timo 内核锁定，不可人工放行（铁律②）。<br><br>建议：替换材料/工艺后重新提交。详见 [[cite:rag|case_id=KB-304-ANOD]]。`;
+        trace = { dispatch_id: "disp_" + Math.random().toString(36).slice(2,8), executed_skills: ["approve_gate"], strategy: "explicit", latency_ms: 80, violations: ["blocked_state"] };
+      } else {
+        skills = [
+          { id: "approve_gate", state: "skipped", detail: "无需 HITL (PASS)" }
+        ];
+        replyText = "当前 context 为 PASS 状态，无需 HITL 审批。如需走 HITL，请重新提交触发门禁升级。";
+        trace = { dispatch_id: "disp_" + Math.random().toString(36).slice(2,8), executed_skills: ["approve_gate"], strategy: "explicit", latency_ms: 60 };
+      }
+    } else {
+      skills = [
+        { id: "chat_understand", state: "ok", detail: "intent=general_qa" },
+        { id: "rag_recall", state: "ok", detail: "kb search (mock)" }
+      ];
+      replyText = `🤖 收到。当前 dispatcher 走 <b>rules_only</b> 路由（LLM 离线）。建议先用预设按钮：📊解析 / 💰报价 / 🛡门禁 / 📚历史 / 📝起草 / ✅批准。<br><br>详见 [[cite:rag|case_id=KB-6061-ANOD]] (MOCK)。`;
+      trace = { dispatch_id: "disp_" + Math.random().toString(36).slice(2,8), executed_skills: ["chat_understand", "rag_recall"], strategy: "rules_only", latency_ms: 120 };
+    }
+    pushMsg("agent", replyText, { skills, trace });
+    addAudit(trace);
+    state.pending = false;
+  }
+
+  // ---- 10. Cite chip 跳转 ----
+  function jumpCite(kind, key){
+    if (kind === "customer") switchInspectTab("regions");
+    else if (kind === "rag" || kind === "postmortem") switchInspectTab("regions");
+    else if (kind === "geometry" || kind === "commercial") switchInspectTab("regions");
+    else if (kind === "hitl") switchInspectTab("approval");
+    const body = $("wbInspectBody");
+    body.classList.remove("wb-flash");
+    void body.offsetWidth;
+    body.classList.add("wb-flash");
+    notify(`📎 已跳转到中栏 → ${kind} · ${key.slice(0,16)}`);
+  }
+
+  // ---- 11. 审批 ----
+  function approve(action){
+    const m = state.bound_mail_id && MAILS.find(x=>x.mail_id===state.bound_mail_id);
+    if (!m || !m.hitl) { notify("当前邮件无 HITL 草稿", false); return; }
+    if (action === "approve" && !m.hitl.can_approve) { notify("🚫 当前不可批准（locked=false 或 status≠HITL）", false); return; }
+    if (action === "reject") {
+      m.verification.status = "DRAFTING";
+      m.hitl = null;
+      notify("✗ 已打回 · context 回到 DRAFTING");
+      addAudit({ dispatch_id: "reject_" + Date.now().toString(36), ts: Date.now()/1000, skills: ["approve_gate"], hitl_required: false, violations: 0, strategy: "explicit" });
+    } else {
+      notify("✓ 已批准 · state=DONE · 审计已落");
+      addAudit({ dispatch_id: "approve_" + Date.now().toString(36), ts: Date.now()/1000, skills: ["approve_gate"], hitl_required: false, violations: 0, strategy: "explicit" });
+    }
+    renderInspect();
+  }
+
+  // ---- 12. Skill Console ----
+  function toggleSkillConsole(){
+    $("wbSkillConsole").classList.toggle("open");
+    if ($("wbSkillConsole").classList.contains("open")) renderSkillConsole();
+  }
+
+  function renderSkillConsole(){
+    const body = $("wbSkillConsoleBody");
+    body.innerHTML = `
+      <h4>Dispatcher 策略</h4>
+      <div>当前: <span class="strategy-pill">auto</span> <span style="color:var(--mut);margin-left:6px">(LLM 离线时自动降级到 rules_only)</span></div>
+
+      <h4 style="margin-top:14px">OpenShell 策略</h4>
+      ${POLICIES.map(p => `
+        <div class="wb-policy-row">
+          <div>
+            <b style="color:var(--tx)">${esc(p.label)}</b>
+            <div style="font-size:10px;color:var(--mut);margin-top:1px">${esc(p.desc)}</div>
+          </div>
+          <span class="toggle ${p.state}">${p.state === 'locked' ? '🔒 LOCKED' : p.state === 'on' ? '✓ ON' : 'OFF'}</span>
+        </div>
+      `).join("")}
+
+      <h4>已注册 Skills (${SKILLS.length})</h4>
+      ${SKILLS.map(s => `
+        <div class="wb-skill-row">
+          <span class="iron-dot ${s.iron}" title="${s.iron === 'det' ? 'deterministic' : s.iron === 'llm' ? 'llm_proposal' : 'no iron rule'}"></span>
+          <span class="nm">${esc(s.id)}</span>
+          <span style="font-size:9px;color:var(--mut)">${esc(s.label)}</span>
+          <span class="en ${s.enabled ? 'on' : 'off'}">${s.enabled ? '✓' : '✗'}</span>
+        </div>
+      `).join("")}
+
+      <h4>审计尾巴 (data/skill_audit.jsonl)</h4>
+      ${state.audit.length ? state.audit.slice(-8).reverse().map(a => `
+        <div class="wb-audit-line">
+          <span class="t">${esc((a.dispatch_id||'').slice(0,16))}</span> · ${esc((a.skills||[]).join('→'))} · ${a.hitl_required ? '🛡HITL' : '✓'} · ${a.violations ? `<span class="v">${a.violations}viol</span>` : 'ok'}
+        </div>
+      `).join("") : '<div style="color:var(--mut);font-size:11px">暂无审计 (打开一封邮件或发条 Chat 触发)</div>'}
+    `;
+  }
+
+  // ---- 13. Audit ----
+  function addAudit(entry){
+    state.audit.push(entry);
+    if (state.audit.length > 50) state.audit = state.audit.slice(-50);
+    $("wbFbAudit").textContent = state.audit.length + " (total)";
+    if ($("wbSkillConsole").classList.contains("open")) renderSkillConsole();
+  }
+
+  // ---- 14. Reset ----
+  function reset(){
+    state.messages = [];
+    state.audit = [];
+    renderChat();
+    notify("🧹 已清空对话和审计");
+  }
+
+  // ---- 15. 状态栏 ----
+  async function refreshFooter(){
+    try {
+      const h = await jfetch("/health");
+      $("wbFbEngine").textContent = h.engine.includes("live") ? "🟢 " + h.engine : "🟡 " + h.engine;
+      $("wbFbApi").textContent = "🟢 ok";
+    } catch(e) {
+      $("wbFbEngine").textContent = "🔴 offline";
+      $("wbFbApi").textContent = "🔴 offline";
+    }
+  }
+
+  // ---- 16. Keyboard ----
+  function onKey(e){
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      e.preventDefault();
+      notify("💡 命令面板 (P1): 输入 '批准' / '算报价' / '打开 Skills'");
+    }
+  }
+
+  // ---- 17. Toast ----
+  function notify(msg, ok = true){
+    if (typeof toast === "function") return toast(msg, ok);
+    console.log("[WB]", msg);
+  }
+
+  // ---- 18. Init ----
+  function init(){
+    renderInbox();
+    renderChat();
+    renderGoldenChain();
+    refreshFooter();
+    pushMsg("sys", "🧰 Workbench v5.1 就绪 · AgentCache + 真 3D + 模型面板 · Ctrl+K 命令面板");
+    // 拉取 AgentCache 统计 (v5.1.0)
+    fetch("/v1/cache/stats").then(r => r.ok ? r.json() : null).then(s => {
+      if (s) pushMsg("sys", `💾 AgentCache: ${s.size}/${s.max_size} 项 · 命中率 ${(s.hit_rate*100).toFixed(0)}%`);
+    }).catch(() => {});
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+  return { init, openMail, send, preset, switchInspectTab, filterInbox, jumpCite, approve, toggleSkillConsole, toggleModelsPanel, reset, onKey, notify, renderSkillConsole, refreshFooter };
+})();
+</script>
+</body>
+</html>

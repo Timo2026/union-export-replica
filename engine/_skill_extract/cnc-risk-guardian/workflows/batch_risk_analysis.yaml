@@ -1,0 +1,25 @@
+# CNC风控官批量分析工作流
+
+name: cnc_risk_guardian_batch
+version: 1.0.0
+
+stages:
+  - name: precheck
+    script: precheck.py
+    description: 数据校验+字段标准化
+
+  - name: infer
+    script: cnc_risk_guardian.py
+    function: analyze_file
+    description: 批量风险推理
+
+  - name: aggregate
+    description: 聚合报告+可视化
+
+output:
+  excel: "risk_report_{timestamp}.xlsx"
+  json: "risk_report_{timestamp}.json"
+
+集成:
+  - hexagram-llm-bridge (LLM增强)
+  - output-bundler (打包交付)

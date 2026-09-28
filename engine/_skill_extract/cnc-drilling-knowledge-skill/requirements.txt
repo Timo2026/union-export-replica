@@ -1,0 +1,3 @@
+# cnc-drilling-knowledge-skill dependencies
+# ClawHub标准SKILL
+# Generated: 2026-05-01

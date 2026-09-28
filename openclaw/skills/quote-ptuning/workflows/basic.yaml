@@ -1,0 +1,12 @@
+name: quote-ptuning_basic
+description: quote-ptuning基本工作流
+
+steps:
+  - name: execute
+    skill: quote-ptuning
+    capability: quote
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

@@ -1,0 +1,292 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Quote P-Tuning 报价脚本
+基于学习结果生成精准报价
+"""
+
+import os
+import sys
+import json
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+import sys as _sys
+
+# 集成 metal-kbs 知识图谱
+_kbs_loaded = False
+_kbs = None
+def _get_kbs():
+    global _kbs, _kbs_loaded
+    if not _kbs_loaded:
+        try:
+            _sys.path.insert(0, str(Path.home() / ".openclaw/skills/metal-kbs/scripts"))
+            from knowledge_graph import MetalKBS
+            _kbs = MetalKBS()
+            _kbs_loaded = True
+        except Exception:
+            _kbs_loaded = True
+    return _kbs
+
+HOME = Path.home()
+CAD_RAG_DIR = HOME / ".openclaw" / "cad_rag"
+SKILL_DIR = HOME / ".openclaw" / "skills" / "quote-ptuning"
+
+# 默认成本参数 (可从学习结果覆盖)
+DEFAULT_PARAMS = {
+    "材料成本系数": {
+        "304不锈钢": 1.0,
+        "316L不锈钢": 1.2,
+        "6061-T6": 0.85, "6061": 0.85,
+        "7075铝合金": 0.95, "7075": 0.95,
+        "铝合金": 0.75,
+        "碳钢": 0.65,
+        "45钢": 0.70, "45": 0.70,
+        "Q235": 0.50,
+        "40Cr": 0.75,
+        "304不锈钢": 1.0, "304": 1.0,
+        "316L不锈钢": 1.2, "316": 1.2, "316L": 1.2,
+        "420不锈钢": 1.0, "420": 1.0,
+        "2083模具钢": 1.5,
+        "DC53模具钢": 2.0, "DC53": 2.0,
+        "SKD11": 1.8,
+        "Cr12MoV": 1.5,
+        "D2": 1.8,
+        "M2高速钢": 2.5, "M2": 2.5,
+        "ASP23": 3.0,
+        "P20": 0.6,
+        "NAK80": 1.0,
+        "S136": 1.2,
+        "钛合金TC4": 3.5,
+        "钛合金": 3.5,
+        "铜合金": 2.0,
+        "黄铜": 1.8,
+        "紫铜": 2.2,
+    },
+    "表面处理系数": {
+        "阳极氧化黑色": 0.15,
+        "阳极氧化本色": 0.10,
+        "电镀": 0.20,
+        "喷砂": 0.08,
+        "抛光": 0.12,
+    },
+    "工时系数": {
+        "简单": 1.0,
+        "普通": 1.5,
+        "复杂": 2.5,
+    },
+    "利润系数": 0.25,  # 25% 利润
+}
+
+def load_learned_knowledge():
+    """加载学习结果"""
+    report_path = SKILL_DIR / "learned" / "quote_knowledge.json"
+    if report_path.exists():
+        with open(report_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return None
+
+# 材料密度表 (g/cm³)，用于体积→重量换算
+MATERIAL_DENSITY = {
+    "6061铝合金": 2.70, "6061-T6": 2.70, "6061": 2.70, "7075铝合金": 2.81, "铝合金": 2.70,
+    "304不锈钢": 7.93, "304": 7.93, "316L不锈钢": 7.98, "316": 7.85, "316L": 7.98,
+    "45钢": 7.85, "45": 7.85, "碳钢": 7.85, "Q235": 7.85, "40Cr": 7.85,
+    "DC53模具钢": 7.85, "DC53": 7.85, "SKD11": 7.85, "Cr12MoV": 7.85, "D2": 7.85,
+    "2083模具钢": 7.85, "420不锈钢": 7.80, "420": 7.80, "S136": 7.85, "NAK80": 7.85, "P20": 7.85,
+    "M2高速钢": 8.16, "M2": 8.16, "ASP23": 8.00,
+    "黄铜": 8.50, "紫铜": 8.96,
+    "TC4钛合金": 4.43, "TC4": 4.43,
+}
+
+def _calc_volume_weight(length_mm, width_mm, height_mm, material):
+    """根据包围盒(L×W×H)估算重量(kg)
+    
+    公式: 体积mm³ × 密度(g/cm³) / 1,000,000 = kg
+    原理: 1cm³ = 1000mm³, 密度g/cm³ = g/1000mm³ = kg/1,000,000mm³
+    """
+    volume_mm3 = length_mm * width_mm * height_mm
+    # 匹配材料密度
+    density = next((v for k, v in MATERIAL_DENSITY.items() if material in k or k in material), 7.85)
+    weight_kg = volume_mm3 * density / 1_000_000
+    return round(weight_kg, 3)
+
+def generate_quote(part_name, quantity, material="304不锈钢", surface="阳极氧化黑色", complexity="普通", weight_kg=None, machining_hours=None, length_mm=None, width_mm=None, height_mm=None):
+    """生成报价"""
+    
+    # 如果有尺寸参数且没传weight_kg，自动估算重量
+    if weight_kg is None and length_mm and width_mm and height_mm:
+        weight_kg = _calc_volume_weight(length_mm, width_mm, height_mm, material)
+        if weight_kg > 0:
+            print(f"\n【包围盒估算】")
+            print(f"   尺寸: {length_mm}×{width_mm}×{height_mm}mm")
+            print(f"   体积: {length_mm*width_mm*height_mm:,} mm³")
+            _density = MATERIAL_DENSITY.get(material, MATERIAL_DENSITY.get('45钢', 7.85))
+            print(f"   估算重量: {weight_kg:.3f}kg (密度{_density:.2f}g/cm³)")
+    
+    print("=" * 60)
+    print(f"Quote P-Tuning 报价生成")
+    print("=" * 60)
+    
+    knowledge = load_learned_knowledge()
+    
+    # 基础单价 (从知识库或默认值)
+    if knowledge and material in knowledge.get("material_prices", {}):
+        base_price = knowledge["material_prices"][material]["avg_price"]
+        print(f"\n【基于历史数据】")
+        print(f"   材料: {material}")
+        print(f"   历史均价: ¥{base_price:.2f}")
+    else:
+        # 使用默认值
+        base_price = 100.0  # 默认基准价
+        # 应用材料成本系数
+        material_coef = DEFAULT_PARAMS["材料成本系数"].get(material, 1.0)
+        base_price = base_price * material_coef
+        print(f"\n【使用默认参数】")
+    
+    # 数量梯度调整
+    if knowledge:
+        qty_gradient = knowledge.get("quantity_gradient", {})
+        if f"1-5件" in qty_gradient and quantity <= 5:
+            gradient_adj = 0.95  # 小批量略高
+        elif f"6-10件" in qty_gradient and quantity <= 10:
+            gradient_adj = 0.90
+        elif f"11-20件" in qty_gradient and quantity <= 20:
+            gradient_adj = 0.85
+        elif f"21-50件" in qty_gradient and quantity <= 50:
+            gradient_adj = 0.80
+        else:
+            gradient_adj = 0.75
+    else:
+        gradient_adj = 0.90 if quantity <= 10 else 0.80
+    
+    # 表面处理系数
+    surface_coef = DEFAULT_PARAMS["表面处理系数"].get(surface, 0.10)
+    surface_cost = base_price * surface_coef
+    
+    # 复杂度系数
+    complexity_coef = DEFAULT_PARAMS["工时系数"].get(complexity, 1.5)
+    
+    # 知识图谱工艺校验
+    kbs = _get_kbs()
+    validation_msg = ""
+    if kbs:
+        try:
+            validation = kbs.validate_and_correct(material, surface)
+            if not validation.get('is_compatible', True):
+                validation_msg = f"\n⚠️ 工艺警告: {validation.get('message', '工艺不可行')}"
+                if validation.get('corrected_surface'):
+                    validation_msg += f"\n   建议改用: {validation['corrected_surface']}"
+                    surface = validation['corrected_surface']
+                print(f"\n【工艺合规校验】")
+                print(f"   材料: {material}")
+                print(f"   输入工艺: {surface if validation.get('corrected_surface') else surface}")
+                print(f"   结果: ❌ 违规 → 已自动修正" if validation.get('corrected_surface') else f"   结果: ❌ 违规")
+        except Exception:
+            pass
+
+    # 材料成本（基于体积/重量）
+    material_cost = 0
+    if weight_kg is not None and weight_kg > 0:
+        material_cost = base_price * 0.3 * weight_kg
+        print(f"   材料成本: ¥{base_price:.2f}×0.3×{weight_kg:.3f}kg = ¥{material_cost:.2f}")
+    elif weight_kg is not None:
+        print(f"   材料成本: 0 (重量为0)")
+
+    # 加工成本（基于工时）
+    machining_cost = 0
+    if machining_hours is not None and machining_hours > 0:
+        machining_cost = 80.0 * machining_hours * 0.7
+        print(f"   加工成本: ¥80/h×{machining_hours}h×0.7 = ¥{machining_cost:.2f}")
+
+    # 明细模式
+    if weight_kg is not None or machining_hours is not None:
+        unit_price = base_price * gradient_adj * complexity_coef + surface_cost + material_cost + machining_cost
+    else:
+        unit_price = base_price * gradient_adj * complexity_coef + surface_cost
+    total_price = unit_price * quantity
+    
+    # 利润
+    profit = total_price * DEFAULT_PARAMS["利润系数"]
+    final_price = total_price + profit
+    
+    print(f"\n【报价明细】")
+    print(f"   零件: {part_name}")
+    print(f"   材料: {material}")
+    print(f"   表面: {surface}")
+    print(f"   复杂度: {complexity}")
+    print(f"   数量: {quantity}件")
+    print(f"   单价: ¥{unit_price:.2f}")
+    print(f"   小计: ¥{total_price:.2f}")
+    print(f"   利润(25%): ¥{profit:.2f}")
+    print(f"   总价: ¥{final_price:.2f}")
+    
+    return {
+        "part_name": part_name,
+        "material": material,
+        "surface": surface,
+        "quantity": quantity,
+        "unit_price": round(unit_price, 2),
+        "total_price": round(total_price, 2),
+        "profit": round(profit, 2),
+        "final_price": round(final_price, 2)
+    }
+
+def main():
+    """
+    CLI入口，兼容两种模式:
+      旧: python3 quote.py <零件> <数量> [材料] [表面] [重量] [工时]
+      新: python3 quote.py --part 法兰 --dimensions 120x80x10 --material 6061
+    """
+    # 检测新旧风格
+    use_new = len(sys.argv) >= 2 and sys.argv[1].startswith('--')
+    
+    if use_new:
+        import argparse
+        parser = argparse.ArgumentParser(description='Quote P-Tuning 报价')
+        parser.add_argument('--part', default='test_part', help='零件名称')
+        parser.add_argument('--qty', type=int, default=1, help='数量')
+        parser.add_argument('--material', default='304不锈钢', help='材料')
+        parser.add_argument('--surface', default='阳极氧化黑色', help='表面处理')
+        parser.add_argument('--weight', type=float, help='单件重量(kg)')
+        parser.add_argument('--hours', type=float, help='单件工时(h)')
+        parser.add_argument('--dimensions', type=str, help='尺寸 LxWxH')
+        parser.add_argument('--length', type=float, help='长度mm')
+        parser.add_argument('--width', type=float, help='宽度mm')
+        parser.add_argument('--height', type=float, help='高度mm')
+        args = parser.parse_args()
+        part_name, quantity = args.part, args.qty
+        material, surface = args.material, args.surface
+        weight_kg, machining_hours = args.weight, args.hours
+        length = width = height = None
+        if args.dimensions:
+            parts = args.dimensions.replace('×', 'x').split('x')
+            if len(parts) == 3:
+                length, width, height = [float(p.strip()) for p in parts]
+        if args.length: length = args.length
+        if args.width: width = args.width
+        if args.height: height = args.height
+    else:
+        # 旧风格: 位置参数
+        if len(sys.argv) < 3:
+            print("用法旧: python3 quote.py <零件> <数量> [材料] [表面] [重量kg] [工时h]")
+            print("用法新: python3 quote.py --part 法兰 --dimensions 120x80x10 --material 6061")
+            return
+        part_name = sys.argv[1]
+        quantity = int(sys.argv[2])
+        material = sys.argv[3] if len(sys.argv) > 3 else '304不锈钢'
+        surface = sys.argv[4] if len(sys.argv) > 4 else '阳极氧化黑色'
+        weight_kg = float(sys.argv[5]) if len(sys.argv) > 5 else None
+        machining_hours = float(sys.argv[6]) if len(sys.argv) > 6 else None
+        length = width = height = None
+    
+    result = generate_quote(
+        part_name, quantity, material, surface,
+        weight_kg=weight_kg, machining_hours=machining_hours,
+        length_mm=length, width_mm=width, height_mm=height
+    )
+    
+    if result:
+        print("\n✅ 报价生成完成!")
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,19 @@
+name: cad_generate
+category: manufacturing
+description: 一句话生成零件 STEP/STL/DXF（TOT 三管道竞争选优）
+timeout: 180
+executor: src.runtime.step_generator_dual
+schema:
+  type: object
+  required: [part_type]
+  properties:
+    part_type:
+      type: string
+      description: 零件类型
+    dimensions:
+      type: object
+      description: 尺寸参数
+    output_format:
+      type: string
+      enum: [step, stl, dxf]
+      description: 输出格式

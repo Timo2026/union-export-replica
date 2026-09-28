@@ -1,0 +1,12 @@
+name: step-factory_basic
+description: step-factory基本工作流
+
+steps:
+  - name: execute
+    skill: step-factory
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

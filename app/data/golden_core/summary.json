@@ -1,0 +1,32 @@
+{
+  "all_ok": false,
+  "skipped": true,
+  "skip_reason": "kernel-absent",
+  "checks": {
+    "pack_ids": [
+      "ceo-decision-cb-bridge",
+      "knowledge-index-lookup",
+      "reference-quote-bridge",
+      "reid-os-bridge",
+      "unionskill-quote-bridge"
+    ],
+    "all_pack_in_allowlist": true,
+    "all_pack_enabled_in_skills_yaml": true,
+    "catalog_not_in_allowlist": true,
+    "iron_rule_1_locked": true,
+    "pack_sample_cannot_override_price": true,
+    "pack_sample_has_no_authoritative_price": true
+  },
+  "engine_source": "offline:kernel-absent(UNVERIFIED)",
+  "kernel_probe": {
+    "state": "absent",
+    "online": false,
+    "kernel_available": false,
+    "source_label": "offline:kernel-absent(UNVERIFIED)",
+    "engine_src": "C:/Users/<user>/Desktop/比赛/英伟达第三/_timo_engine/Timo_CNC-AI-Brain-v12.0-Fusion - 副本",
+    "engine_python": "C:/Users/<user>/Desktop/比赛/英伟达第三/_timo_engine/Timo_CNC-AI-Brain-v12.0-Fusion - 副本/.venv/Scripts/python.exe",
+    "usable": false
+  },
+  "results": [],
+  "ts": 1789953947.7801688
+}

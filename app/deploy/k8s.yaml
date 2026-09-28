@@ -1,0 +1,90 @@
+# UEA — Union Manufacturing Export Agent, K8s 清单 (Track D 部署代码化)
+# 原则: 一切端点/路径从 ConfigMap 读取, 镜像内禁止硬编码 (继承 CONTRIBUTING 规范)
+# 铁律① data-stays-local: 不出网, 不挂外部 Secret; 凭据一律走 SecretKeyRef/env。
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: uea-config
+  labels: {app: union-export-agent, component: config}
+data:
+  UEA_PROFILE: "demo"
+  UEA_TIMO_BASE_URL: "http://timo-kernel:7862"
+  UEA_TIMO_ENGINE_SRC: "/opt/engine/cnc-ai-brain"
+  UEA_TIMO_ENGINE_PYTHON: "/opt/engine/venv/bin/python"
+  UEA_EGRESS_ALLOW: ""                       # 空 = 集中式出网主闸默认 DENY (fail-safe)
+  UEA_LOG_LEVEL: "INFO"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: union-export-agent-api
+  labels: {app: union-export-agent, component: api}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: union-export-agent, component: api}
+  template:
+    metadata:
+      labels: {app: union-export-agent, component: api}
+    spec:
+      containers:
+        - name: api
+          image: union-export-agent:0.9.0
+          imagePullPolicy: IfNotPresent
+          command: ["python", "scripts/start_api.py"]
+          args: ["--host", "0.0.0.0", "--port", "8900"]
+          ports:
+            - name: http
+              containerPort: 8900
+          envFrom:
+            - configMapRef:
+                name: uea-config
+            # 真凭据只从这里进 (Secret 由运维在集群侧创建, 不入库不入交付包)
+            - secretRef:
+                name: uea-runtime-secrets
+                optional: true
+          env:
+            - name: UEA_TIMO_ENGINE_PYTHON
+              value: "/opt/engine/venv/bin/python"
+          resources:
+            requests: {cpu: "500m", memory: "1Gi"}
+            limits:   {cpu: "2",    memory: "4Gi"}
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false   # data/ 需可写 (上下文/审计/traces)
+          volumeMounts:
+            - name: uea-data
+              mountPath: /app/data
+            - name: uea-engine
+              mountPath: /opt/engine
+              readOnly: true
+      volumes:
+        - name: uea-data
+          persistentVolumeClaim:
+            claimName: uea-data-pvc
+        - name: uea-engine
+          persistentVolumeClaim:
+            claimName: uea-engine-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: union-export-agent-api
+  labels: {app: union-export-agent, component: api}
+spec:
+  type: ClusterIP
+  selector: {app: union-export-agent, component: api}
+  ports:
+    - name: http
+      port: 8900
+      targetPort: http

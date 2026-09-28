@@ -1,0 +1,11 @@
+{
+  "owner": "cjboy007",
+  "slug": "quotation-workflow",
+  "displayName": "Quotation Workflow",
+  "latest": {
+    "version": "3.0.0",
+    "publishedAt": 1774596108956,
+    "commit": "https://github.com/openclaw/skills/commit/673ea1a5d2b6708721c8b4e9f28611efebea475e"
+  },
+  "history": []
+}

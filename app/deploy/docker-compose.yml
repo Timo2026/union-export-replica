@@ -1,0 +1,49 @@
+# UEA — 本地/单机 compose (开发与验收用; 生产走 k8s.yaml)
+# 铁律① data-stays-local: 不配任何外发 SMTP/webhook; egress 主闸默认 DENY。
+# 端口约定: 8888 已被本机 inference/api_server.py 占用 → WebUI 固定 8900。
+name: union-export-demo
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: union-export-agent:0.9.0
+    command: ["python", "scripts/start_api.py", "--host", "0.0.0.0", "--port", "8900"]
+    environment:
+      UEA_PROFILE: "demo"
+      UEA_TIMO_BASE_URL: "http://timo-kernel:7862"
+      UEA_TIMO_ENGINE_SRC: "/opt/engine/cnc-ai-brain"
+      UEA_TIMO_ENGINE_PYTHON: "/opt/engine/venv/bin/python"
+      UEA_EGRESS_ALLOW: ""            # 空 = 默认 DENY (fail-safe)
+    ports:
+      - "127.0.0.1:8900:8900"         # 只绑回环, 不对外暴露
+    volumes:
+      - uea-data:/app/data
+      - uea-engine:/opt/engine:ro
+    depends_on:
+      - timo-kernel
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys;sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8900/health',timeout=3).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # 确定性制造决策内核 (cnc-ai-brain v12.0-Fusion) — 离线兜底 + 在线 FastAPI
+  # 引擎源码体积大且含 .venv, 不入 git; 用 UEA_ENGINE_SRC 挂载点注入。
+  timo-kernel:
+    image: union-export-engine:12.0
+    environment:
+      UEA_ENGINE_HOST: "0.0.0.0"
+      UEA_ENGINE_PORT: "7862"
+    volumes:
+      - uea-engine:/opt/engine:ro
+    ports:
+      - "127.0.0.1:7862:7862"
+    profiles: ["engine"]
+
+volumes:
+  uea-data:
+  uea-engine:

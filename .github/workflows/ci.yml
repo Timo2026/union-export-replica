@@ -1,0 +1,53 @@
+name: CI
+
+# 复刻包持续验证：结构 + 隐私扫描（verify_replica.sh）+ app 全量回归（pytest）
+# 公开 clone 不带制造内核 (_timo_engine)，故需真内核的用例由 tests/conftest.py 的
+# require_engine fixture 显式 skip —— 这是设计，不是失败。
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: 包结构 + 隐私扫描
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 自检（结构 / 秘密扫描 / 规模清点）
+        run: bash scripts/verify_replica.sh
+
+  app-tests:
+    name: app 回归 (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r app/requirements.txt
+          pip install cryptography imap-tools   # 可选模态，装了才跑对应用例
+      - name: 跑测试
+        working-directory: app
+        env:
+          PYTHONUTF8: "1"
+          UEA_FORCE_OFFLINE: "1"
+        run: python -m pytest tests/ -q
+
+  node-check:
+    name: Node/WebUI 构建物存在性
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 前端真值 = webui-dist 已编译产物
+        run: |
+          test -f app/webui-dist/index.html
+          ls app/webui-dist/assets/*.js >/dev/null
+          echo "webui-dist OK"

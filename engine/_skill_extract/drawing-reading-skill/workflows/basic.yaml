@@ -1,0 +1,12 @@
+name: drawing-reading-skill_basic
+description: drawing-reading-skill基本工作流
+
+steps:
+  - name: execute
+    skill: drawing-reading-skill
+    capability: query
+    params:
+      request: "${input}"
+
+output:
+  - 执行结果JSON

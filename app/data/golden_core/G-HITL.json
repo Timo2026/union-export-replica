@@ -1,0 +1,24 @@
+{
+  "id": "G-HITL",
+  "expect_status": "HITL",
+  "verification_status": "HITL",
+  "state": "HITL",
+  "context_id": "RFQ-20260919-92EB1A",
+  "customer_id": "CUST-G02",
+  "quote": {
+    "unit_price": 3372.5,
+    "final_price": 41650.38,
+    "_source": "offline:calc_quote",
+    "hash": null
+  },
+  "engine_source": "offline:vendored-kernel(byte-identical)",
+  "multimodal_conflicts": [],
+  "reasons": [
+    "IT5 属精密公差(超常规CNC经济公差), 强制人工复核"
+  ],
+  "audit_valid": true,
+  "reply_subject": "Re: RFQ RFQ-20260919-92EB1A — under review",
+  "auto_send": false,
+  "ok": true,
+  "ts": 1789830452.4020581
+}

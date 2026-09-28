@@ -1,0 +1,103 @@
+# agent.yaml — Union Manufacturing Export Agent 部署契约
+# 风格对齐  `nemo-agents-spec-v1` (NeMo Platform / Fabric)。
+# 诚实声明(对齐冻结 PRD §25): 具体字段名需以目标 NeMo Platform 版本的 CLI/schema 校验后方可注册;
+# 本文件是可执行的产品契约模板, 同时被本仓库 agent_spec.py 校验 (见 tests/test_agent_spec.py)。
+
+apiVersion: nemo.agents/v1
+kind: Agent
+metadata:
+  name: union-manufacturing-export-agent
+  version: 2.0.0-livekernel
+  description: Manufacturing B2B Export Agent — From RFQ to Revenue
+  alignment: NCP-AAI 工业 AI 协议 (Agentic AI)
+
+spec:
+  instructions: >
+    把一个外贸询盘转成可审计、可验证、可复盘的制造业商业决策对象。
+    LLM/VLM/ASR 只做感知-理解-规划; RAG 提供证据; 规则提供约束; 几何提供事实;
+    报价引擎提供数字; Agent 负责协调; 人做最终授权。LLM 不生成最终价格。
+
+  # ---- L3 Model Mesh: 角色 → 后端 (由 services/model_router.py 解析) ----
+  models:
+    backend: local                 # local | nvidia(NIM) | mock
+    roles:
+      FAST:   {endpoint: "http://127.0.0.1:1234/v1", model: "qwen3.8-27b"}
+      VISION: {endpoint: "http://127.0.0.1:1234/v1", model: "qwen3.8-27b"}
+      REASON: {endpoint: "http://127.0.0.1:1234/v1", model: "qwen3.8-27b"}
+      EMBED:  {endpoint: "http://127.0.0.1:1278/v1", model: "bge-m3"}
+      ASR:    {endpoint: "http://127.0.0.1:8089",    model: "Qwen3-ASR-0.6B"}
+      DETERMINISTIC: {backend: timo-kernel, endpoint: "http://127.0.0.1:7862", model: "calc_quote+ConflictChecker"}
+    nvidia_nim:                    # Profile C 可选后端 (本机无  硬件时探测失败即降级)
+      # v3 (2026-09-20): 对齐 hf-mirror 实测仓库 (docs/PRD-MASTER-UEA-DELIVERY.md §1.2-F);
+      # NIM 容器线需 docker 权限 (spark-51 无 -> 实跑 = vLLM 进程级, models.nvidia-fullstack.yaml)
+      FAST:   {endpoint: "http://127.0.0.1:8002/v1", model: "nvidia/NVIDIA-Nemotron-3-Nano-4B-BF16"}
+      REASON: {endpoint: "http://127.0.0.1:8000/v1", model: "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4"}
+      VISION: {endpoint: "http://127.0.0.1:8020/v1", model: "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-NVFP4"}
+      EMBED:  {endpoint: "http://127.0.0.1:8011/v1", model: "nvidia/Nemotron-3-Embed-1B-BF16"}
+      ASR:    {endpoint: "http://127.0.0.1:8021/v1", model: "nvidia/nemotron-3.5-asr-streaming-0.6b", note: "v3 专档流式; Parakeet 非 Blackwell 自托管; N0 回退 FunASR"}
+
+  # ---- L6/L7 工具与技能 (tool allow-list 与 guardrails 一致) ----
+  tools:
+    - name: rfq-extraction
+      description: 邮件/文本 → canonical RFQ 结构化字段
+    - name: step-geometry
+      description: 真实 OCP B-rep 几何 (bbox/体积/重量) + C1 特征
+    - name: dfm-conflict
+      description: 材料×表面×公差 禁忌矩阵 (Timo 内核)
+    - name: cnc-quote
+      description: 确定性报价 (Timo calc_quote)
+    - name: freight-customs
+      description: freight/customs/Incoterms → landed cost
+    - name: asr
+      description: 语音转写 (funasr/Qwen3-ASR)
+    - name: vlm-perception
+      description: 图纸/图片 VLM 感知 (只出事实不定价格)
+    - name: historical-rag
+      description: 历史制造经验检索 (援)
+    - name: verification
+      description: 辟·牟·援·推·止 + HITL 门禁
+    - name: reply-draft
+      description: 英文回复草稿 (draft_only)
+    - name: crm-sync
+      description: 写业务事实 + 记忆引用
+    - name: postmortem
+      description: 成交/丢单复盘 → 知识回流
+
+  # ---- L5 Memory Fabric ----
+  memory:
+    working:  {store: session, in_default_context: true}
+    fact:     {store: sqlite, tables: [customers, rfqs, quotes, postmortems]}
+    semantic: {store: vector, backend: funasr-rag}
+    artifact: {store: filesystem, path: data/artifacts}
+    episodic: {store: sha256-chain, path: data/contexts}
+
+  # ---- Guardrails (services/guardrails.py) ----
+  guardrails:
+    backend: builtin               # builtin | nemo
+    input:  {prompt_injection: block, data_exfiltration: block, dangerous_content: block, credential_leak: block}
+    tool:   {allowlist_enforced: true, param_schema_enforced: true}
+    output: {quote_schema: enforce, forbidden_promises: block, external_send_policy: draft_only}
+
+  # ---- L8 Control plane ----
+  control:
+    loop_a: CAT                    # Context → Action → Test
+    loop_b: rfq-state-machine      # NEW→...→DONE / BLOCKED / HITL
+    business_state_authoritative: true
+
+  # ---- Observability (services/observability.py) ----
+  observability:
+    tracing: {protocol: otel-json, export: data/traces, otlp_endpoint: null}
+    metrics: [tool_calls, tool_errors, hitl_triggers, retrievals, model_calls, latency_ms]
+    correlate: [context_id, agent_run, skill, tool_call, model, retrieval, verification, human_action]
+
+  # ---- Security / data residency ----
+  security:
+    data_residency: local-first
+    external_send: {default: draft_only, require_approval_when: [high_value, precision, conflict, blocked]}
+    network_egress: allow-list
+    secrets: env-or-manager
+
+  # ---- Deployment profiles ----
+  deployment:
+    default_profile: A
+    profiles: [A, B, C, D]         # 见 deploy/profiles/*.yaml

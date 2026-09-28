@@ -1,0 +1,23 @@
+policy_id: hitl-required
+description: 高风险自动转人工审批
+version: 1
+triggers:
+  - field: quote_total_cny
+    op: gt
+    value: 100000
+  - field: unit_price_cny
+    op: gt
+    value: 12000
+  - field: risk_score
+    op: gt
+    value: 0.7
+  - field: verification_status
+    op: in
+    value: [HITL, BLOCKED]
+  - field: dfm_valid
+    op: eq
+    value: false
+action:
+  - set_hitl_required_true
+  - withhold_final_autosend
+note: 金额门禁对齐 config/policy.yaml amount_gate; 叠加而非替换现有 HITL
